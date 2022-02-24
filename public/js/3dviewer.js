@@ -1,13 +1,26 @@
  (function() { 
 
- 	updateUI = (el, res) => {
- 		let modelUrl = res.url;
-		console.log('showing button for '+modelUrl);
+ 	updateUI = (el, modelUrl) => {
+		//console.log('showing button for '+modelUrl);
+		var a = document.createElement('a');
+      	var linkText = document.createTextNode("Click to View in 3D");
+			a.appendChild(linkText);
+			a.title = "View in 3D";
+			a.href = "#";
+		var viewerEl = el;
+			viewerEl.innerHTML ='';
+			viewerEl.appendChild(a);
+
+		return a;			
  	}
 
- 	addClickListener = (el, res) => {
- 		let modelUrl = res.url;
+ 	addClickListener = (el, modelUrl) => {
 		console.log('adding listener for '+modelUrl);
+		el.addEventListener("click", (e)=>{
+			e.preventDefault();
+			e.stopPropagation();
+			console.log('init three for: '+modelUrl);
+		});		
  	}
 
  	initViewer = () => {
@@ -17,12 +30,15 @@
  	
  	initModel = (el) => {
  		const that = this;
- 		let url = '/nft/4e42529372066f0fe48fdbf825a0a551ef506e8c844c6a827e3dcb9c1c158d4e'
+ 		let url = '/nfts/a183b36867a953166bef9e3f5f461bb3b0c772da50093acf614331313fee2a8d'
  		fetch(url)
- 		.then((res)=>{	
+ 		.then(response => response.json())
+ 		.then((data)=>{	
 
- 			if(res !== undefined){
- 				this.updateUI(el, res)
+ 			if(data !== undefined){
+ 				console.log(data);
+ 				let link = this.updateUI(el, data.modelUrl);
+ 				this.addClickListener(link, data.modelUrl);
  			};
 
  		}).catch(err => alert(err));
