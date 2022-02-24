@@ -1,0 +1,13 @@
+<h1>{{title}}</h1>
+{{#if nftData.PostFound}}
+<p>{{nftData.PostFound.Body}}</p>
+{{/if}}
+
+{{#if nftData.message}}
+<p>{{nftData.message}}</p>
+{{/if}}
+
+{{#if previewImg}}
+<img class="nft-preview" src="{{previewImg}}"/>
+<p class="nft-viewer" data-nft="4e42529372066f0fe48fdbf825a0a551ef506e8c844c6a827e3dcb9c1c158d4e">Loading...</p>
+{{/if}}
