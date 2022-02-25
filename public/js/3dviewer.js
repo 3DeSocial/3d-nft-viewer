@@ -4,21 +4,26 @@
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
 
-        let parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
-        let parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
+        this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
 
         this.parentDivEl.children[0].setAttribute('style','display:none;');
         //Lets create a new Scene
         this.scene = new THREE.Scene();
 
         //Create a camera
-        this.camera = new THREE.PerspectiveCamera(60, parentDivElWidth/parentDivElHeight, 0.01, 1000 );
+        this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
         this.camera.position.set(0,0,0.1);
 
         //Create a WebGLRenderer
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer.setSize(parentDivElWidth, parentDivElHeight);
+        this.renderer = new THREE.WebGLRenderer({antialias: true,
+                alpha: true,
+                preserveDrawingBuffer: true});
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+        this.renderer.setClearColor( 0x000000, 1 );
+
         this.parentDivEl.appendChild(this.renderer.domElement);
 
         //Loader GLTF
@@ -29,7 +34,7 @@
 
 
         //Add lights
-        const ambientLight = new THREE.Light(0xffffff, 1);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
         this.scene.add(ambientLight);
 
         //Add dirlights
@@ -47,12 +52,10 @@
 
 
         window.addEventListener('resize', () => {
-        let parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
-        let parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
-            this.camera.aspect = parentDivElWidth/parentDivElHeight;
+            this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
 
-            this.renderer.setSize(parentDivElWidth, parentDivElHeight);
+            this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
 
         })
 
@@ -147,8 +150,7 @@
 		el.addEventListener("click", (e)=>{
 			e.preventDefault();
 			e.stopPropagation();
-			console.log('init three for: '+modelUrl);
-			//initThree(modelUrl);
+
 			let container = document.getElementById( 'container' );
   			let appInstance = new Viewer(container);
     			appInstance.load(modelUrl);			
@@ -159,7 +161,6 @@
  		const that = this;
 
  		let nftPostHash = el.getAttribute('data-nft');
- 		console.log('nftPostHash:' +nftPostHash);
  		let url = '/nfts/'+nftPostHash;
  		fetch(url)
  		.then(response => response.json())
@@ -171,7 +172,10 @@
  				this.addClickListener(link, fullUrl);
  			};
 
- 		}).catch(err => alert(err));
+ 		}).catch(err => {
+ 			console.log(err);
+ 			console.log(response);
+ 		});
 
  	} 	
 
