@@ -49,17 +49,18 @@
  	}
 
 	function initThree(modelUrl) {
-
+	  container = document.getElementById( 'container' );
+let rendererHeight = container.offsetHeight;
+let rendererWidth = container.offsetWidth;
 	  renderer = new THREE.WebGLRenderer( { antialias: false } );
 	  renderer.setClearColor( 0xc3ffaa, 1.0 );
-	  renderer.setSize( window.innerWidth, window.innerHeight );
+	  renderer.setSize( rendererWidth, rendererHeight );
 
-	  container = document.getElementById( 'container' );
 	  container.innerHTML = '';
 	  container.appendChild( renderer.domElement );
 
-	  camera = new THREE.PerspectiveCamera( cameraFov, window.innerWidth / window.innerHeight, 0.1, 1000 );
-	  camera.aspect = container.innerWidth / container.innerHeight;
+	  camera = new THREE.PerspectiveCamera( cameraFov, rendererWidth / rendererHeight, 0.1, 1000 );
+	  camera.aspect = rendererWidth / rendererHeight;
 	  camera.updateProjectionMatrix();
 
 	  const gltfLoader = new THREE.GLTFLoader();
@@ -71,7 +72,7 @@ console.log('gltfLoader: '+url);
 
 	    scene = new THREE.Scene();
 	    const root = gltf.scene;
-	    renderer.render( root, camera );
+	    renderer.render( scene, camera );
 
 
 	    var box = new THREE.Box3().setFromObject( root.children[0]);
@@ -84,7 +85,7 @@ console.log('gltfLoader: '+url);
 	    console.log('max size: ',objectSize);
 	    // Calculate the camera distance
 
-	    var aspect = window.innerWidth / window.innerHeight;
+	    var aspect = rendererWidth / rendererHeight;
 	    var fov = cameraFov * ( Math.PI / 180 );
 
 	      console.log('fov: ',fov);
