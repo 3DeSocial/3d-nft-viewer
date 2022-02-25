@@ -165,6 +165,13 @@ buildModelUrlFromFiles = (nftPostHashHex) =>{
   console.log('search folder:  '+ extractPath);
 
   fromDir(extractPath, '.'+modelFormat);
+  console.log(results);
+  if(results.length === 0){
+     modelFormat = 'gltf';
+     console.log('search folder:  '+ extractPath);
+     fromDir(extractPath, '.'+modelFormat);    
+     console.log(results);
+  }
   let fileLocation = results[0];
   let fileLocationParts = fileLocation.split(nftPostHashHex);
   let fileUrlPart = fileLocationParts[1];
