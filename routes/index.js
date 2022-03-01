@@ -8,9 +8,13 @@ const Fs = require('fs')
 const Path = require('path') 
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-let nftPostHashHex = req.query.nft;
-console.log('nftPostHashHex: '+nftPostHashHex);
+router.get('/:nftPostHashHex', function(req, res, next) {
+let nftPostHashHex = req.params.nftPostHashHex;
+    if(nftPostHashHex==='favicon.ico'){
+      res.send('not an nft');
+      return;
+    };
+
 nftReader.fetchNft(nftPostHashHex).then((r)=>{
 
   if(r.data){

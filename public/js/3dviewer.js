@@ -162,7 +162,7 @@
 
  		let nftPostHash = el.getAttribute('data-nft');
  		let url = '/nfts/'+nftPostHash;
- 		fetch(url)
+ 		fetch(url,{ method: "post"})
  		.then(response => response.json())
  		.then((data)=>{	
 

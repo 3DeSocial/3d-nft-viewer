@@ -6,13 +6,10 @@ const Axios = require('axios')
 const Fs = require('fs')  
 const Path = require('path') 
   // nfts/<nftPostHashHex> => return modelurl for three js or start download
-  router.get('/:nftPostHashHex', (req, res) => {
+  router.post('/:nftPostHashHex', (req, res) => {
 
     const nftPostHashHex = req.params.nftPostHashHex;
 
-
-
-    
     if(modelIsExtracted(nftPostHashHex)){
       console.log('modelIsExtracted: OK');
       modelUrl = buildModelUrlFromFiles(nftPostHashHex);
