@@ -13,9 +13,8 @@ const Path = require('path')
     if(modelIsExtracted(nftPostHashHex)){
       console.log('modelIsExtracted: OK');
       modelUrl = buildModelUrlFromFiles(nftPostHashHex);
-      res.send({modelUrl:modelUrl});
+      res.send({success:true,modelUrl:modelUrl});
     } else {
-      console.log('modelIsExtracted: NOPE');
 
       nftReader.fetchNft(nftPostHashHex).then((r)=>{
         if(r.data){
@@ -47,12 +46,15 @@ const Path = require('path')
           }).catch((err)=>{
             console.log('downloadNFTZip failed');
             console.log(err);
+            let nftData = {success:false,'message':'downloadNFTZip failed.'+r.statusText};
+            let viewData = nftData;        
+            res.send(viewData);            
           })
 
     
         }
       }).catch((r)=>{
-          let nftData = {'message': r.status+' '+r.statusText};
+          let nftData = {success:false,'message': r.status+' '+r.statusText};
           let viewData = nftData;        
           res.send(viewData);
     });

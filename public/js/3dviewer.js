@@ -125,8 +125,6 @@
 
  (function() { 
 
-	var container;
-
 	var camera, controls, scene, renderer;
 
 	var cameraFov = 60;
@@ -138,6 +136,7 @@
 			a.appendChild(linkText);
 			a.title = "View in 3D";
 			a.href = "#";
+            a.classList = "btn";
 		var viewerEl = el;
 			viewerEl.innerHTML ='';
 			viewerEl.appendChild(a);
@@ -145,18 +144,25 @@
 		return a;			
  	}
 
+
+
  	addClickListener = (el, modelUrl) => {
+        let that = this;
 		//console.log('adding listener for '+modelUrl);
 		el.addEventListener("click", (e)=>{
 			e.preventDefault();
 			e.stopPropagation();
+            let parentLi = el.parentNode.parentNode;
+            console.log(parentLi.children);            
+           
 
-			let container = document.getElementById( 'container' );
+            let container = parentLi.children[1];
+            console.log(container);
   			let appInstance = new Viewer(container);
     			appInstance.load(modelUrl);			
 		});		
  	}
-	
+
  	initModel = (el) => {
  		const that = this;
 
