@@ -10,8 +10,8 @@
         this.parentDivEl.children[0].setAttribute('style','display:none;');
         //Lets create a new Scene
         this.scene = new THREE.Scene();
-        let skyBox = this.loadSkyBox();
-
+        let skyBox = this.loadSkyBox('bluecloud');
+        this.scene.background = skyBox;
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
@@ -49,18 +49,42 @@
 
     }
 
-    loadSkyBox(){
-        const loader = new THREE.CubeTextureLoader();
-        
-        loader.setPath( '/images/skyboxes/space1/' );
+    loadSkyBox(boxname){
+        let skybox ='';
 
-        const skybox = loader.load([
-                            '1.png',
-                            '2.png',
-                            '3.png',
-                            '4.png',
-                            '5.png',
-                            '6.png']);
+        const loader = new THREE.CubeTextureLoader();
+            loader.setPath( '/images/skyboxes/'+boxname+'/' );
+
+        switch(boxname){
+            case 'bluecloud':
+                skybox = loader.load([
+                            'bluecloud_ft.jpg',
+                            'bluecloud_bk.jpg',
+                            'bluecloud_up.jpg',
+                            'bluecloud_dn.jpg',
+                            'bluecloud_rt.jpg',
+                            'bluecloud_lf.jpg']);
+            break;
+            case 'lightblue':
+                skybox = loader.load([
+                            'right.png',
+                            'left.png',
+                            'top.png',
+                            'bot.png',
+                            'front.png',
+                            'back.png']);
+            break;             
+            case 'blue':
+                skybox = loader.load([
+                            'bkg1_right.png',
+                            'bkg1_left.png',
+                            'bkg1_top.png',
+                            'bkg1_bot.png',
+                            'bkg1_front.png',
+                            'bkg1_back.png']);
+            break;
+        }
+        
         return skybox;
     }
     onWindowResize() {
