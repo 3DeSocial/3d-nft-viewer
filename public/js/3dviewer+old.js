@@ -10,13 +10,17 @@
         this.parentDivEl.children[0].setAttribute('style','display:none;');
         //Lets create a new Scene
         this.scene = new THREE.Scene();
-        let skyBox = this.loadSkyBox();
+
 
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(0,0,0.1);
+        this.camera.position.set(0,0,0);
+        let skyBox = this.loadSkyBox();
 
+       // skyBox.mapping = THREE.EquirectangularReflectionMapping;
+        this.scene.background = skyBox;
+       // this.scene.add( skyBox );
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({antialias: true,
                 alpha: true,
@@ -52,7 +56,7 @@
     loadSkyBox(){
         const loader = new THREE.CubeTextureLoader();
         
-        loader.setPath( '/images/skyboxes/space1/' );
+        loader.setPath( 'images/skyboxes/space1/' );
 
         const skybox = loader.load([
                             '1.png',
@@ -62,6 +66,23 @@
                             '5.png',
                             '6.png']);
         return skybox;
+
+       /*     textureCube.format = THREE.RGBFormat;
+            var shader = THREE.SkyBoxShader;
+            console.log( shader.uniforms);
+   
+          shader.uniforms['tCube'].value = textureCube;
+
+            var skyBoxMaterial = new THREE.ShaderMaterial( {
+              fragmentShader: shader.fragmentShader,
+              vertexShader: shader.vertexShader,
+              uniforms: shader.uniforms,
+              depthWrite: false,
+              side: THREE.BackSide
+            });
+            let skyBox = new THREE.Mesh(new THREE.BoxGeometry(1000,1000,1000), skyBoxMaterial);
+            skyBox.frustumCulled = false;
+            return skyBox;*/
     }
     onWindowResize() {
 
@@ -168,11 +189,9 @@
 			e.preventDefault();
 			e.stopPropagation();
             let parentLi = el.parentNode.parentNode;
-            console.log(parentLi.children);            
            
 
             let container = parentLi.children[1];
-            console.log(container);
   			let appInstance = new Viewer(container);
     			appInstance.load(modelUrl);			
 		});		
