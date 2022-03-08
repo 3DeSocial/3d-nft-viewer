@@ -10,7 +10,11 @@
         this.parentDivEl.children[0].setAttribute('style','display:none;');
         //Lets create a new Scene
         this.scene = new THREE.Scene();
-        let skyBox = this.loadSkyBox('bluecloud');
+        
+        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+        let skyBoxNo = this.getRandomInt(0,4);
+console.log('skyBoxList[skyBoxNo]:'+skyBoxList[skyBoxNo]);
+        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
         this.scene.background = skyBox;
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
@@ -49,6 +53,10 @@
 
     }
 
+    getRandomInt (min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
     loadSkyBox(boxname){
         let skybox ='';
 
@@ -64,6 +72,24 @@
                             'bluecloud_dn.jpg',
                             'bluecloud_rt.jpg',
                             'bluecloud_lf.jpg']);
+            break;
+            case 'yellowcloud':
+                skybox = loader.load([
+                            'yellowcloud_ft.jpg',
+                            'yellowcloud_bk.jpg',
+                            'yellowcloud_up.jpg',
+                            'yellowcloud_dn.jpg',
+                            'yellowcloud_rt.jpg',
+                            'yellowcloud_lf.jpg']);
+            break;
+            case 'browncloud':
+                skybox = loader.load([
+                            'browncloud_ft.jpg',
+                            'browncloud_bk.jpg',
+                            'browncloud_up.jpg',
+                            'browncloud_dn.jpg',
+                            'browncloud_rt.jpg',
+                            'browncloud_lf.jpg']);
             break;
             case 'lightblue':
                 skybox = loader.load([
