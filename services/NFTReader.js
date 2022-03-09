@@ -56,13 +56,10 @@ class NFTReader {
             results.push(filename);
         };
     };
-};
-
-  parseNftLink(name) {
-    this._name = name.charAt(0).toUpperCase() + name.slice(1);
-  }
+  };
 
   initDeSoClient(){
+
     this.desoNodeClient = axios.create({
       baseURL: this.config.nodeEndpoint,
       withCredentials: false,
@@ -85,37 +82,32 @@ class NFTReader {
   }
 
   retrieveNFT(nftPostHashHex) {
+    
     let that = this;
 
-    this.fetchNft(nftPostHashHex)
-        .then(r => {
-          let nftData = r.data;
-          let previewImg = (r.data.PostFound.ImageURLs[0]?nftData.PostFound.ImageURLs[0]:null);
-          let viewData = {title: nftPostHashHex,
-                          nftData:nftData};
+    return new Promise(( resolve, reject ) => {
+      let modelUrl = null;
+      if(that.modelIsExtracted(nftPostHashHex)){
 
-          if(nftData.PostFound.ImageURLs[0]){
-            viewData.previewImg = previewImg;
-          };
+        modelUrl = that.buildModelUrlFromFiles(nftPostHashHex);
+        resolve({success:true, modelUrl:modelUrl});
 
-          let extraData = nftData.PostFound.PostExtraData['3DExtraData'];
-          let models = nftReader.parse3DExtraData(extraData);
-          let arweaveUrl = models[0].ModelUrl;
+      } else {
 
-          that.downloadNFT(nftPostHashHex, arweaveUrl)})
-
-        .then(r => {
-
-            let modelVersionFolderName = ''; //default
-            let extractPath = Path.resolve('public', 'models/',nftPostHashHex);
-            var modelFormat = '';
-            that.extractModel(nftPostHashHex, savePath, extractPath,res);
-
-        })
+        that.fetchNft(nftPostHashHex)
+        .then(r => that.downloadNFTZip(nftPostHashHex, r))
+        .then((savePath) => that.extractModel(nftPostHashHex, savePath))
         .then(files =>{
           modelUrl = that.buildModelUrlFromFiles(nftPostHashHex);
-          res.send({modelUrl:modelUrl});
+          resolve({success:true, modelUrl:modelUrl});
+        }).catch(err=>{
+          console.log(err);
+          resolve({success:true, modelUrl:modelUrl});
         })
+
+      }
+    });
+
   }
 
   fetchNft(nftPostHashHex) {
@@ -135,21 +127,21 @@ class NFTReader {
           });
   }
 
-  downloadNFTZip(nftPostHashHex, arweaveUrl){
-    
-    console.log('arweaveUrl: '+ arweaveUrl);
+  downloadNFTZip(nftPostHashHex, r){
+    let nftData = r.data;
+    let previewImg = (r.data.PostFound.ImageURLs[0]?nftData.PostFound.ImageURLs[0]:null);
+    let extraData = nftData.PostFound.PostExtraData['3DExtraData'];
+    let models = this.parse3DExtraData(extraData);
+    let arweaveUrl = models[0].ModelUrl;
 
     let tempDir = 'models_tmp/'+nftPostHashHex;
 
     let tempDirPath = Path.resolve('public', 'models_tmp/',nftPostHashHex);
-    console.log('makeDirIfNotExists',tempDirPath);
     this.makeDirIfNotExists(tempDirPath);
 
     let filename = nftPostHashHex+'.zip';
     let savePath = Path.resolve('public', 'models_tmp/',nftPostHashHex, filename);
-    console.log('savePath for file: ',savePath);
     const writer = Fs.createWriteStream(savePath);
-    console.log('downloading: ',arweaveUrl);
 
     axios({
       url: arweaveUrl,
@@ -161,6 +153,7 @@ class NFTReader {
 
     return new Promise((resolve, reject) => {
       writer.on('finish', ()=>{
+        console.log('write complete to savePath:'+savePath);
         resolve(savePath);
       })
       writer.on('error', (err)=>{
@@ -170,42 +163,42 @@ class NFTReader {
 
   }
 
-  extractModel(nftPostHashHex, savePath, extractPath, res){
-    let that = this;
-    console.log('extractDir created: '+extractPath);
+  extractModel(nftPostHashHex, savePath){
 
-    console.log('location of zip file: ',savePath);
-    console.log('extract to: ',extractPath);
+    let modelVersionFolderName = ''; //default
+    let extractPath = Path.resolve('public', 'models/',nftPostHashHex);
+    var modelFormat = '';
 
-        if(Fs.existsSync(savePath)) {
-        console.log("The file exists.");
+    return new Promise(( resolve, reject ) => {
+      let that = this;
+
+      if(Fs.existsSync(savePath)) {
+
+        unzipper.Open.file(savePath)
+          .then(d => d.extract({path: extractPath, concurrency: 5}))
+          .then(()=>{
+            let modelUrl = that.buildModelUrlFromFiles(nftPostHashHex);
+            resolve({succes:true,modelUrl:modelUrl});
+        })
+        .catch(err=>{
+          console.log('extract err: ');
+          console.log(err);
+          reject({success:false,err:err});
+        });        
       } else {
-            console.log("The file does not exist:"+savePath);
-
+        reject({success:false,err:'The file does not exist: '+savePath});
       };
-    unzipper.Open.file(savePath)
-      .then(d => d.extract({path: extractPath, concurrency: 5}))
-      .then(()=>{
-          let modelUrl = that.buildModelUrlFromFiles(nftPostHashHex);
-          res.send({modelUrl:modelUrl});
-      })
-      .catch(err=>{
-        console.log('extract err: ');
-        console.log(err);
-      });
+
+    });
   }
 
   makeDirIfNotExists(dirPath){
     if (!Fs.existsSync(dirPath)) {
-            console.log('makeDirIfNotExists creating:',dirPath)
-
       Fs.mkdirSync(dirPath, (err) => {
         if (err) {
             return console.error(err);
         }
       });
-    } else {
-      console.log('dir already created:',dirPath)
     };
   }
 
@@ -214,7 +207,6 @@ class NFTReader {
     if(Fs.existsSync(destDirPath)){
       return true;
     };
-    console.log('dir does not exist: '+destDirPath);
     return false;
   }
 
@@ -222,7 +214,6 @@ class NFTReader {
     let modelExtraData = JSON.parse(NFT3DData);
     return modelExtraData['3DModels'];
   }
-  
- 
 };
-module.exports = new NFTReader();
+
+module.exports = NFTReader;
