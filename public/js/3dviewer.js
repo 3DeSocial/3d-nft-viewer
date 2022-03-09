@@ -37,7 +37,6 @@ console.log('skyBoxList[skyBoxNo]:'+skyBoxList[skyBoxNo]);
         //Controls
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-
         //Add lights
         const ambientLight = new THREE.AmbientLight(0xffffff, 1);
         this.scene.add(ambientLight);
@@ -58,10 +57,11 @@ console.log('skyBoxList[skyBoxNo]:'+skyBoxList[skyBoxNo]);
     }
 
     loadSkyBox(boxname){
+
         let skybox ='';
 
         const loader = new THREE.CubeTextureLoader();
-            loader.setPath( '/images/skyboxes/'+boxname+'/' );
+              loader.setPath( '/images/skyboxes/'+boxname+'/' );
 
         switch(boxname){
             case 'bluecloud':
@@ -205,7 +205,7 @@ console.log('skyBoxList[skyBoxNo]:'+skyBoxList[skyBoxNo]);
 		var viewerEl = el;
 			viewerEl.innerHTML ='';
 			viewerEl.appendChild(a);
-
+        el.setAttribute('model-status','available');
 		return a;			
  	}
 
@@ -230,29 +230,41 @@ console.log('skyBoxList[skyBoxNo]:'+skyBoxList[skyBoxNo]);
 
  	initModel = (el) => {
  		const that = this;
+        let modelStatus = el.getAttribute('model-status');
+        if(!modelStatus){
+            modelStatus = 'requested';
+            el.setAttribute('model-status',modelStatus);
+        };
+        if(modelStatus!=='available'){
+     		let nftPostHash = el.getAttribute('data-nft');
+     		let url = '/nfts/'+nftPostHash;
+     		fetch(url,{ method: "post"})
+     		.then(response => response.json())
+     		.then((data)=>{	
 
- 		let nftPostHash = el.getAttribute('data-nft');
- 		let url = '/nfts/'+nftPostHash;
- 		fetch(url,{ method: "post"})
- 		.then(response => response.json())
- 		.then((data)=>{	
+     			if(data !== undefined){
+     				let fullUrl = '/models/'+nftPostHash+data.modelUrl;
+     				let link = this.updateUI(el, fullUrl);
+     				this.addClickListener(link, fullUrl);
+     			};
 
- 			if(data !== undefined){
- 				let fullUrl = '/models/'+nftPostHash+data.modelUrl;
- 				let link = this.updateUI(el, fullUrl);
- 				this.addClickListener(link, fullUrl);
- 			};
-
- 		}).catch(err => {
- 			console.log(err);
- 			console.log(response);
- 		});
+     		}).catch(err => {
+     			console.log(err);
+     			console.log(response);
+     		});
+        };
 
  	} 	
 
- 	let nfts = Array.from(document.getElementsByClassName('nft-viewer'));
+    initNFTs = (container)=>{
+        if(!container){
+            container = document;
+        };
+    
+        let nfts = Array.from(container.getElementsByClassName('nft-viewer'));
+        nfts.forEach(this.initModel);        
+    }
 
- 	nfts.forEach(this.initModel);
-
+    this.initNFTs();
 
  })(this);
