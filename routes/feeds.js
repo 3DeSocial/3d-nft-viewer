@@ -3,7 +3,6 @@ var router = express.Router();
 var profileReader = require('../services/DeSoProfileReader.js');
 var feedReader = require('../services/DeSoFeedReader.js');
 const Axios = require('axios') 
-
 const Fs = require('fs')  
 
 router.get('/:publicKey', (req, res) => {
@@ -20,8 +19,6 @@ router.get('/:publicKey', (req, res) => {
         if(r.data){
           if(r.data.NFTsMap){
             let allNFTs = r.data.NFTsMap;
-            console.log(allNFTs);
-            console.log(typeof(allNFTs));
             for(i in allNFTs){
               let nft = allNFTs[i];
               let PostExtraData = nft.PostEntryResponse.PostExtraData;
@@ -31,7 +28,6 @@ router.get('/:publicKey', (req, res) => {
                     let nftData = {previewImage: previewImage,
                                   message: nft.PostEntryResponse.Body,
                                   nftPostHashHex: nft.PostEntryResponse.PostHashHex};
-
                     xrNFTs.push(nftData);
                   };
               };
@@ -40,17 +36,13 @@ router.get('/:publicKey', (req, res) => {
           }
         };
 
-        if(xrNFTs.length > 0){
-          console.log(xrNFTs.length+' 3D NFTs detected');     
-        };
-
-
         profileReader.fetchProfile(publicKey).then((r)=>{
           if(r.data.UserList){
             let user = r.data.UserList[0];
             let userName = user.ProfileEntryResponse.Username;
             res.render('feeds', { title: publicKey,
-                nfts: xrNFTs,publicKey:publicKey,
+                nfts: xrNFTs,
+                publicKey:publicKey,
                 userName: userName});
           }
         });
