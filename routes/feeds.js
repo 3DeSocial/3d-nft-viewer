@@ -1,13 +1,15 @@
 var express = require('express');
 var router = express.Router();
-var profileReader = require('../services/DeSoProfileReader.js');
-var feedReader = require('../services/DeSoFeedReader.js');
+var D3DNFT = require('3d-nft-viewer');
 const Axios = require('axios') 
 const Fs = require('fs')  
 
 router.get('/:publicKey', (req, res) => {
 
   const publicKey = req.params.publicKey;
+
+  let feedReader = new D3DNFT.FeedReader();
+  let profileReader = new D3DNFT.ProfileReader();
 
   feedReader.fetchNFTFeed(publicKey).then((r)=>{
         if(!r.data){

@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "3d-nft-viewer": "^1.0.4",
     "axios": "^0.26.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",

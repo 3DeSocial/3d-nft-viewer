@@ -2,7 +2,7 @@ var express = require('express');
 const app = express();
 
 var router = express.Router();
-var NFTReader = require('../services/NFTReader.js');
+var D3DNFT = require('3d-nft-viewer');
 const Axios = require('axios') 
 const Fs = require('fs')  
 const Path = require('path') 
@@ -17,7 +17,7 @@ router.get('/:nftPostHashHex', function(req, res, next) {
     return;
   };
 
-  let nftReader = new NFTReader({
+  let nftReader = new D3DNFT.NFTReader({
       nodeEndpoint: 'https://node.deso.org/api/v0/',
       readerPublicKey: 'BC1YLh3GazkEWDVqMtCGv6gbU79HcMb1LKAgbYKiMzUoGDEsnnBSiw7',
       modelStorageDir: 'public/models/'
@@ -30,12 +30,12 @@ router.get('/:nftPostHashHex', function(req, res, next) {
         
         if(nftData.PostFound.ImageURLs[0]){
           let previewImg = (nftData.PostFound.ImageURLs[0]?nftData.PostFound.ImageURLs[0]:null);
-          console.log({ title: 'Express',
+          console.log({ title: '3D NFT viewer',
           nftData: nftData,
           previewImg:previewImg,
           nftPostHashHex: nftPostHashHex });
 
-          res.render('index', { title: 'Express',
+          res.render('index', { title: '3D NFT viewer',
           nftData: nftData,
           previewImg:previewImg,
           nftPostHashHex: nftPostHashHex });
