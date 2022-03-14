@@ -31,3 +31,11 @@ ul li{
 img{
 	max-width: 100%;
 }
+.ctr-box{
+	text-align: center;
+	font-size: 18px;
+}
+.ctr-box input {
+	height: 2em;
+	padding: 0.25em;
+}

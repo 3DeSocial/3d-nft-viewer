@@ -7,6 +7,9 @@ const Axios = require('axios')
 const Fs = require('fs')  
 const Path = require('path') 
 
+router.get('/', function(req, res, next) {
+res.render('index', { title: '3D NFT viewer'});
+});
 /* View the NFT using GET request */
 router.get('/:nftPostHashHex', function(req, res, next) {
   

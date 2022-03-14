@@ -12,4 +12,21 @@
 	<p class="nft-viewer" data-nft="{{nftPostHashHex}}">Loading...</p>
 	{{/if}}
 
+{{else}}
+
+	<h1>3D NFT Viewer</h1>
+	<form action="/feeds" method="post">
+		<div class="ctr-box">
+			<label for="username">Enter Deso Username:</label>
+			<input name="username" type="text"/>
+			<button>View NFTs</button>
+		</div>
+	</form>
+
+	<h2>Examples:</h2>
+	<ul>
+		<li><a href="/feeds/3desocial/">3DeSocial</a></li>
+	</ul>
+
 {{/if}}
+

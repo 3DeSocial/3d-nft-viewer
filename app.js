@@ -7,6 +7,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var nftsRouter = require('./routes/nfts.js');
 var feedsRouter = require('./routes/feeds.js');
+var usersRouter = require('./routes/users.js');
 
 var app = express();
 
@@ -16,10 +17,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+
 app.use('/nfts', nftsRouter);
 app.use('/feeds', feedsRouter);
-
+app.use('/users', usersRouter);
+app.use('/', indexRouter);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');

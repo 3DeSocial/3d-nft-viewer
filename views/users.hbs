@@ -1,0 +1,17 @@
+
+
+{{#if publicKey}}
+<h1>{{userName}}'s 3D NFTs</h1>
+<ul class='nft-feed'>
+{{#each nfts}}
+<li>
+		<p>{{message}}</p>
+		<div class="container">
+		<img class="nft-preview" src="{{previewImage}}"/>
+		</div>
+		<p class="nft-viewer" data-nft="{{nftPostHashHex}}">Loading...</p>
+</li>
+{{/each}}
+</ul>	
+
+{{/if}}
