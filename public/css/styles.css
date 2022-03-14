@@ -2,7 +2,7 @@ html , body {
 	background-color: #f7f9f9;
   font-family: sans-serif;
 }
-h1 {
+h1, h2 {
 	text-align: center;
 }
 a.btn {

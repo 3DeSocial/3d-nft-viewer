@@ -2,6 +2,13 @@
 
 {{#if publicKey}}
 <h1>{{userName}}'s 3D NFTs</h1>
+<form action="/feeds" method="post">
+	<div class="ctr-box">
+		<label for="username">Enter Deso Username:</label>
+		<input name="username" type="text"/>
+		<button>View NFTs</button>
+	</div>
+</form>
 <ul class='nft-feed'>
 {{#each nfts}}
 <li>
