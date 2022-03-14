@@ -80,7 +80,7 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
-[Bb]in
+[B]in
 [Dd]ebug*/
 *.lib
 *.sbr
