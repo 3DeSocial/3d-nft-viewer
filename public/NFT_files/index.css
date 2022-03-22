@@ -8,6 +8,5 @@ a.view-3d-btn {
 	display: inline-block;
 }
 canvas {
-	width: 100%;
 	min-width: 420px;
 }

@@ -7,9 +7,10 @@ router.post('/:nftPostHashHex', (req, res) => {
   const nftPostHashHex = req.params.nftPostHashHex;
 
   let nftReader = new D3DNFT.NFTReader({
-      nodeEndpoint: 'https://node.deso.org/api/v0/',
+      nodeEndpoint: 'https://api.nftz.zone/api/v0/',
       readerPublicKey: 'BC1YLh3GazkEWDVqMtCGv6gbU79HcMb1LKAgbYKiMzUoGDEsnnBSiw7',
-      modelStorageDir: 'public/models/'
+      modelStorageDir: 'public/models/',
+      modelTmpStorageDir: 'public/models_tmp/'
   });
 
   nftReader.retrieveNFT(nftPostHashHex)
