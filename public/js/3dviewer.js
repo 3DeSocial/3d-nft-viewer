@@ -14,6 +14,8 @@
             ...config
         };
 
+        this.isFullScreen = false;
+
     }
 
     initContainer(parentDivEl){
@@ -62,10 +64,10 @@
         directionalLight.position.set(-4,15,10);
         this.scene.add(directionalLight);
 
-        this.parentDivEl.children[0].setAttribute('style','display:none;');
-        this.renderer.domElement.setAttribute('style','display:inline-block;');
-
         this.animate();
+        this.addEventListenerResize();
+        this.addEventListenerExitFullScreen();
+
 
     }
 
@@ -130,19 +132,55 @@
         
         return skybox;
     }
-    onWindowResize() {
+
+    addEventListenerResize() {
+
         let that = this;
 
-
         window.addEventListener('resize', () => {
+            that.resizeCanvas();
+        });
 
-            that.camera.aspect = that.parentDivElWidth/that.parentDivElHeight;
-            that.camera.updateProjectionMatrix();
-            that.renderer.setSize(that.parentDivElWidth, that.parentDivElHeight);
-            that.fitCameraToMesh(model.scene);
+    }
 
-        })
+    addEventListenerExitFullScreen = () =>{
+        if (document.addEventListener){
+            document.addEventListener('webkitfullscreenchange', this.fsChangeHandler, false);
+            document.addEventListener('mozfullscreenchange', this.fsChangeHandler, false);
+            document.addEventListener('fullscreenchange', this.fsChangeHandler, false);
+            document.addEventListener('MSFullscreenChange', this.fsChangeHandler, false);
+        }
+    }
 
+    fsChangeHandler = () =>{
+            if (document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement !== undefined) {
+            console.log('enter fulll screen');
+        } else {
+            console.log('exit fulll screen');
+          var elem = this.renderer.domElement;
+            elem.style.width = 'auto';
+            elem.style.height = 'auto';
+            this.isFullScreen = false;            
+            this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+        }
+    
+    }
+
+    resizeCanvas = () =>{
+        if(this.isFullScreen){
+            let canvasWidth = screen.width;
+            let canvasHeight = screen.height;
+            this.camera.aspect = canvasWidth/canvasHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(canvasWidth,canvasHeight);
+        } else {
+            this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
+        }
+        this.fitCameraToMesh(this.nftMesh);        
     }
 
     animate() {
@@ -152,7 +190,7 @@
 
     }
 
-     fitCameraToMesh(mesh, fitOffset = 1.2) {
+     fitCameraToMesh(mesh, fitOffset = 0.75) {
 
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
@@ -182,12 +220,18 @@
         this.controls.update();
     }
 
-    load(modeURL) {
+    load(modeURL,cb) {
+        let that = this;
 
         this.gltfLoader.load(modeURL, (model)=> {
+
             model.scene.updateMatrixWorld(true);
-            this.fitCameraToMesh(model.scene);
-            this.scene.add(model.scene);
+            that.scene.add(model.scene);            
+            that.fitCameraToMesh(model.scene);
+            that.nftMesh = model.scene;
+            that.parentDivEl.children[0].setAttribute('style','display:none;');
+            that.renderer.domElement.setAttribute('style','display:inline-block;');
+            if(cb){cb()};
         })
 
 
@@ -196,37 +240,92 @@
     updateUI = (el, modelUrl) => {
 
         let linkCtr = this.config.linkCtrCls;
+        let linkView3D = this.createLinkView3D();
+        this.addClickListener3D(el, linkView3D, modelUrl);
 
+        let linkViewFull = this.createLinkFullScreen()
+        this.addClickListenerFullScreen(el, linkViewFull, modelUrl);
+
+        var viewerEl = el;
+            viewerEl.appendChild(linkView3D);
+            viewerEl.appendChild(linkViewFull);
+
+        el.setAttribute('model-status','available');
+    }
+
+    createLinkView3D = () =>{
         var a = document.createElement('a');
         var linkText = document.createTextNode(this.config.linkText);
             a.appendChild(linkText);
             a.title = "View in 3D";
             a.href = "#";
-            a.classList = "btn view-3d-btn";
-        var viewerEl = el;
-            viewerEl.appendChild(a);
-        el.setAttribute('model-status','available');
-        return a;           
+            a.classList = "btn d3d-btn view-3d-btn";
+        return a;
     }
 
+    createLinkFullScreen = () =>{
+        var a = document.createElement('a');
+        var linkText = document.createTextNode('Full Screen');
+            a.appendChild(linkText);
+            a.title = "Fullscreen";
+            a.href = "#";
+            a.classList = "btn d3d-btn view-fullscreen-btn";
+            a.setAttribute('style','display:none;');
+        return a;
+    }    
 
+  openFullscreen =()=> {
+      var elem = this.renderer.domElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+      }
+      elem.style.width = '100%';
+      elem.style.height = '100%';
+      this.isFullScreen = true;
+    }
 
-    addClickListener = (ctr, el, modelUrl) => {
+    addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
-        let targetEl = this.findElFrom(ctr);
+        let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
 
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
             e.stopPropagation();
-            that.initContainer(targetEl)
-            that.load(modelUrl);         
+            that.updateLink(el,'Loading..');
+            that.initContainer(targetEl);
+            that.load(modelUrl, function(){
+                el.setAttribute('style','display:none;');
+                el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
+            });         
         });     
     }
 
-    findElFrom = (ctr) =>{
+    addClickListenerFullScreen = (ctr, el, modelUrl) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            that.openFullscreen();
+            that.resizeCanvas(true);
+        });     
+    }    
+
+    updateLink = (linkEl, linkText)=> {
+        linkEl.text = linkText;
+    }
+
+    findElFrom = (elClassName, ctr) =>{
         let targetEl = null;
-        let matchedEls = ctr.getElementsByClassName(this.config.previewCtrCls);
+        let matchedEls = ctr.getElementsByClassName(elClassName);
         if(matchedEls.length>0){
             targetEl = matchedEls[0];
         };
@@ -259,8 +358,7 @@
 
                 if(data !== undefined){
                     let fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
-                    let link = this.updateUI(el, fullUrl);
-                    this.addClickListener(el, link, fullUrl);
+                    this.updateUI(el, fullUrl);
                 };
 
             }).catch(err => {
