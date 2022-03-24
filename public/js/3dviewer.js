@@ -303,8 +303,21 @@
             that.load(modelUrl, function(){
                 el.setAttribute('style','display:none;');
                 el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
+                that.addFloor();
             });         
         });     
+    }
+
+    addFloor = () =>{
+        const geometry = new THREE.PlaneGeometry( 20, 20  );
+        geometry.rotateX(-Math.PI * 0.5);
+        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set( 10, 10 );
+        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+        const plane = new THREE.Mesh( geometry, material );
+        this.scene.add( plane );
     }
 
     addClickListenerFullScreen = (ctr, el, modelUrl) => {
