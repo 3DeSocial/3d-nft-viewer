@@ -33,19 +33,24 @@
   <link rel="stylesheet" href="NFT_files/CreatorHeader-b870ed1b.css">
   <link rel="stylesheet" href="NFT_files/GridContent-aeec65ad.css">
   <link rel="stylesheet" href="NFT_files/details.svelte.css">
+  <link rel="stylesheet" href="css/styles.css">
 
  </head>
- 
   <body cz-shortcut-listen="true">
+   <form id="nft-overlay" class="nft-3d-overlay" style="display:none;">
+    <dl><dt>Show Floor</dt>
+    <dd><input type="checkbox" id="floor" name="floor" value="Show Floor" checked="checked"/></dd>
+    </dl>
+  </form>    
     {{{body}}}
-    <script src="/js/three.min.js"></script> 
-    <script src="/js/OrbitControls.js"></script> 
-    <script src="/js/GLTFLoader.js"></script> 
-    <script src="/js/3dviewer.js"></script>
-    <script type="text/javascript">
-      (function() { 
+   
+    <script type="module">
+      // Find the latest version by visiting https://cdn.skypack.dev/three.
 
-        //initialize NFT viewer front end
+      import { D3DNFTViewer } from '/js/3dviewer.js'
+      console.log(D3DNFTViewer);
+
+            //initialize NFT viewer front end
         let nftViewer = new D3DNFTViewer({
             ctrClass: 'nft-viewer', // Attribute of div containing image
             nftDataAttr: 'data-nft', // Attribute of div.ctrClass containing post has hex
@@ -57,7 +62,7 @@
         });
         nftViewer.initNFTs();
 
-     })(this);
    </script>
   </body>
 </html>
+ 

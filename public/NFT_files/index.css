@@ -4,7 +4,7 @@
 }
 a.d3d-btn {
 	color: #fff;
-	padding-top: 0.5em;
+	padding: 0.5em 0em 0.25em 0.25em;
 	display: inline-block;
 }
 canvas {

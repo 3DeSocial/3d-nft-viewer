@@ -1,41 +1,29 @@
-html , body {
-	background-color: #f7f9f9;
-  font-family: sans-serif;
+.post-wrapper {
+	overflow: hidden;
 }
-h1, h2 {
-	text-align: center;
-}
-a.btn {
-	background-color: #005bff;
-	border: none;
-	border-radius: 8px;
-	font-size: 17px;
+a.d3d-btn {
 	color: #fff;
-	height: 48px;
-	line-height: 24px;
-	margin-top: 10px;
-	padding: 6px 12px;
+	padding: 0.5em 0em 0.25em 0.25em;
+	display: inline-block;
+}
+canvas {
+	min-width: 420px;
+}
+
+form.nft-3d-overlay {
+	display: inline-block;
+	position: absolute;
+	color: #fff;
+	left: 0;
 	width: 100%;
-	text-decoration: none;
+	right: 0;
+	border-bottom: 1px solid #fff;
 }
-ul li{
-	display: block;
-	width: 30em;
-	margin: 0 auto;
-	background-color: #ffffff;
-	padding: 1em;
-	border-radius: 10px;
-	margin-bottom: 1em;
-	border: solid #666 1px;
+.nft-3d-overlay dl {
+	margin: 0.5em 0em 0.25em 0.5em;
 }
-img{
-	max-width: 100%;
-}
-.ctr-box{
-	text-align: center;
-	font-size: 18px;
-}
-.ctr-box input {
-	height: 2em;
-	padding: 0.25em;
+.nft-3d-overlay dl dd,
+.nft-3d-overlay dl dt {
+	display: inline-block;
+	margin-left: 0.5em;
 }

@@ -1,3 +1,48 @@
+export const name = 'd3dntfviewer';
+
+import * as THREE from 'https://cdn.skypack.dev/three@0.120.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.skypack.dev/three@0.120.0/examples/jsm/controls/OrbitControls.js'
+import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.120.0/examples/jsm/loaders/GLTFLoader.js';
+import { XRControllerModelFactory } from 'https://cdn.skypack.dev/three@0.120.0/examples/jsm/webxr/XRControllerModelFactory.js';
+import { VRButton } from '/js/DSO_VRButton.js';
+
+class D3DNFTViewerOverlay {
+    constructor(config) {
+
+        let defaults = {
+                    el: document.body,
+                    handlers: {}
+                };
+        
+        this.config = {
+            ...defaults,
+            ...config
+        };
+
+        this.optionsMenu = this.createOptionsMenu(this.el);
+        this.addEventListeners();
+
+    }
+
+    createOptionsMenu = () =>{
+        const node = document.getElementById("nft-overlay");
+        let menu = node.cloneNode(true);
+            menu.setAttribute('style','display:inline-block;');
+            this.config.el.appendChild(menu);
+        return menu;
+    }
+
+    addEventListeners = () =>{
+        let that = this;
+        let floorCbx = this.optionsMenu.querySelector('#floor');
+        floorCbx.addEventListener('change',(e)=>{
+            if(that.config.handlers['floor']){
+                that.config.handlers['floor'](floorCbx.checked);
+            }
+        })
+    }
+}
+
  class D3DNFTViewer {
     
     constructor(config) {
@@ -15,6 +60,7 @@
         };
 
         this.isFullScreen = false;
+        this.floorPlane = null;
 
     }
 
@@ -50,10 +96,10 @@
         this.parentDivEl.appendChild(this.renderer.domElement);
 
         //Loader GLTF
-        this.gltfLoader = new THREE.GLTFLoader();
+        this.gltfLoader = new GLTFLoader();
 
         //Controls
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
         //Add lights
         const ambientLight = new THREE.AmbientLight(0xffffff, 2);
@@ -68,7 +114,23 @@
         this.addEventListenerResize();
         this.addEventListenerExitFullScreen();
 
+    }
 
+    showOverlay =()=>{
+
+        let that = this;
+        let overlay = new D3DNFTViewerOverlay({
+            el: this.parentDivEl,
+            handlers: {
+                floor: (checked)=>{
+                    if(checked){
+                        that.addFloor();
+                    } else {
+                        that.removeFloor();
+                    }
+                }
+            }
+        })        
     }
 
     getRandomInt (min, max) {
@@ -154,9 +216,9 @@
 
     fsChangeHandler = () =>{
             if (document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement !== undefined) {
-            console.log('enter fulll screen');
+            console.log('enter full screen');
         } else {
-            console.log('exit fulll screen');
+            console.log('exit full screen');
           var elem = this.renderer.domElement;
             elem.style.width = 'auto';
             elem.style.height = 'auto';
@@ -246,9 +308,13 @@
         let linkViewFull = this.createLinkFullScreen()
         this.addClickListenerFullScreen(el, linkViewFull, modelUrl);
 
+        let linkViewVR = this.createLinkVR()
+        this.addClickListenerVR(el, linkViewVR, modelUrl)
+
         var viewerEl = el;
             viewerEl.appendChild(linkView3D);
             viewerEl.appendChild(linkViewFull);
+            viewerEl.appendChild(linkViewVR);
 
         el.setAttribute('model-status','available');
     }
@@ -273,6 +339,18 @@
             a.setAttribute('style','display:none;');
         return a;
     }    
+
+    createLinkVR = () =>{
+        var a = document.createElement('a');
+        var linkText = document.createTextNode('View in VR');
+            a.appendChild(linkText);
+            a.title = "View in VR";
+            a.href = "#";
+            a.classList = "btn d3d-btn view-vr-btn";
+            a.setAttribute('style','display:none;');
+        return a;
+    }    
+    
 
   openFullscreen =()=> {
       var elem = this.renderer.domElement;
@@ -303,21 +381,35 @@
             that.load(modelUrl, function(){
                 el.setAttribute('style','display:none;');
                 el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
+                el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
                 that.addFloor();
+                that.showOverlay();
+                VRButton.registerSessionGrantedListener();        
+                let vrButtonEl = VRButton.createButton(that.renderer);
+
             });         
         });     
     }
 
     addFloor = () =>{
-        const geometry = new THREE.PlaneGeometry( 20, 20  );
-        geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 10, 10 );
-        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
-        const plane = new THREE.Mesh( geometry, material );
-        this.scene.add( plane );
+        if(this.floorPlane){
+            this.scene.add( this.floorPlane );
+        } else {
+            const geometry = new THREE.PlaneGeometry( 20, 20  );
+            geometry.rotateX(-Math.PI * 0.5);
+            let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set( 10, 10 );
+            const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+            this.floorPlane = new THREE.Mesh( geometry, material );
+            this.scene.add( this.floorPlane );           
+        }
+
+    }
+
+    removeFloor = () =>{
+        this.scene.remove( this.floorPlane );
     }
 
     addClickListenerFullScreen = (ctr, el, modelUrl) => {
@@ -332,6 +424,22 @@
         });     
     }    
 
+    addClickListenerVR = (ctr, el, modelUrl) => {
+        let that = this;
+
+        //console.log('adding listener for '+modelUrl);
+        el.addEventListener("click", (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            that.openVR();
+            that.resizeCanvas(true);
+        });     
+    }   
+
+    openVR = (el) =>{
+
+
+    }
     updateLink = (linkEl, linkText)=> {
         linkEl.text = linkText;
     }
@@ -383,3 +491,4 @@
     }    
 }
 
+export {D3DNFTViewer, D3DNFTViewerOverlay};
