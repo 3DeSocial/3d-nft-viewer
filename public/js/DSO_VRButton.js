@@ -8,7 +8,8 @@ class VRButton {
 
     }
 
-    const button = document.createElement( 'button' );
+    let vrButtons = document.getElementsByClassName('view-vr-btn');
+    const button = vrButtons[0];
 
     function showEnterVR( /*device*/ ) {
 
@@ -37,13 +38,9 @@ class VRButton {
 
       //
 
-      button.style.display = '';
+      button.style.display = 'inline-block';
 
-      button.style.cursor = 'pointer';
-      button.style.left = 'calc(50% - 50px)';
-      button.style.width = '100px';
-
-      button.textContent = 'ENTER VR';
+//      button.textContent = 'ENTER VR';
 
       button.onmouseenter = function () {
 
@@ -126,10 +123,11 @@ class VRButton {
       button.id = 'VRButton';
       button.style.display = 'none';
 
-      stylizeElement( button );
+    //  stylizeElement( button );
 
       navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
 
+      console.log('immersive-vr supported: ',supported);
         supported ? showEnterVR() : showWebXRNotFound();
 
         if ( supported && VRButton.xrSessionIsGranted ) {
