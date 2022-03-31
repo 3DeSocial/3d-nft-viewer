@@ -88,33 +88,44 @@ class D3DNFTViewerOverlay {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(0,0,0.1);
+        this.camera.position.set(10, 8, 40);
 
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({antialias: true,
                 alpha: true,
                 preserveDrawingBuffer: true});
+
         this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.xr.enabled = true;
+        //the following increases the resolution on Quest
+        this.renderer.xr.setFramebufferScaleFactor(2.0);
+
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
         this.renderer.domElement.setAttribute('style','display:none;');
         this.parentDivEl.appendChild(this.renderer.domElement);
+
+        this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+        this.pmremGenerator.compileEquirectangularShader();
+
+        this.renderer.domElement.style.width = '100%';
+        this.renderer.domElement.style.height = '100%';
 
         //Loader GLTF
         this.gltfLoader = new GLTFLoader();
 
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
+        this.controls.addEventListener('change', this.render);
+        this.controls.update()
         //Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 2);
-        this.scene.add(ambientLight);
+        this.hlight = new THREE.AmbientLight(0xffffff);
+        this.scene.add(this.hlight);
 
-        //Add dirlights
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
-        directionalLight.position.set(-4,15,10);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(-4, 15, 10);
         this.scene.add(directionalLight);
-
         this.addEventListenerResize();
         this.addEventListenerExitFullScreen();
 
@@ -403,7 +414,7 @@ class D3DNFTViewerOverlay {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
                                             // (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
-                                            // self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
+                                            self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
                                             //provide haptic feedback if available in browser
                                             /*  if (
                                         source.gamepad.hapticActuators &&
