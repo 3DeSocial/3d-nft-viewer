@@ -68,7 +68,7 @@ class D3DNFTViewerOverlay {
         this.controllers = []
 
     }
-
+    
     initContainer(parentDivEl){
         //First lets create a parent DIV
         this.parentDivEl = parentDivEl;
@@ -78,18 +78,32 @@ class D3DNFTViewerOverlay {
 
         //Lets create a new Scene
         this.scene = new THREE.Scene();
-        if(this.config.skyboxes !== false){
-            let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-            let skyBoxNo = this.getRandomInt(0,4);
-            let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-            this.scene.background = skyBox;
-        };
-        
+        this.initSkybox();
+        this.initCamera();
+        this.initRenderer();
+        this.initLighting();
+        this.initLoaders();
+        this.initControls();
+        this.addListeners();
+
+    }
+
+    initCamera = () =>{
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
         this.camera.position.set(10, 8, 40);
 
+    }
+
+    initControls = () =>{
+        //Controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.addEventListener('change', this.render);
+        this.controls.update();        
+    }
+
+    initRenderer = () =>{
         //Create a WebGLRenderer
         this.renderer = new THREE.WebGLRenderer({antialias: true,
                 alpha: true,
@@ -110,15 +124,20 @@ class D3DNFTViewerOverlay {
         this.pmremGenerator.compileEquirectangularShader();
 
         this.renderer.domElement.style.width = '100%';
-        this.renderer.domElement.style.height = '100%';
+        this.renderer.domElement.style.height = '100%';        
+    }
 
-        //Loader GLTF
-        this.gltfLoader = new GLTFLoader();
 
-        //Controls
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.addEventListener('change', this.render);
-        this.controls.update()
+    initSkybox = ()=>{
+        if(this.config.skyboxes !== false){
+            let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+            let skyBoxNo = this.getRandomInt(0,4);
+            let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
+            this.scene.background = skyBox;
+        };
+    }
+
+    initLighting = () =>{
         //Add lights
         this.hlight = new THREE.AmbientLight(0xffffff);
         this.scene.add(this.hlight);
@@ -126,10 +145,17 @@ class D3DNFTViewerOverlay {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(-4, 15, 10);
         this.scene.add(directionalLight);
+    }
+
+    initLoaders = () =>{
+        //Loader GLTF
+        this.gltfLoader = new GLTFLoader();        
+    }
+
+    addListeners = ()=>{
         this.addEventListenerResize();
         this.addEventListenerExitFullScreen();
-
-    }
+    }    
 
     showOverlay =()=>{
 
