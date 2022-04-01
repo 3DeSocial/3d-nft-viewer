@@ -690,19 +690,17 @@ class D3DNFTViewerOverlay {
 
 
     addFloor = () =>{
-        if(this.floorPlane){
-            this.scene.add( this.floorPlane );
-        } else {
-            const geometry = new THREE.PlaneGeometry( 20, 20  );
-            geometry.rotateX(-Math.PI * 0.5);
-            let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set( 10, 10 );
-            const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
-            this.floorPlane = new THREE.Mesh( geometry, material );
-            this.scene.add( this.floorPlane );           
-        }
+
+        const geometry = new THREE.PlaneGeometry( 20, 20  );
+        geometry.rotateX(-Math.PI * 0.5);
+        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set( 10, 10 );
+        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+        this.floorPlane = new THREE.Mesh( geometry, material );
+        this.scene.add( this.floorPlane );           
+        
 
     }
 
