@@ -268,8 +268,7 @@ class D3DNFTViewerOverlay {
 
     resize = () =>{
         if (!this.renderer.xr.isPresenting) {
-            this.camera.aspect = this.containerWidth / this.containerHeight;
-            this.camera.updateProjectionMatrix();
+            this.resizeCanvas();
         } else {
         }
         // this.render();
