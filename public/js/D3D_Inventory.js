@@ -19,10 +19,6 @@ class Item {
         this.width = this.config.width;
         this.depth = this.config.depth;
 
-        console.log('item loaded');
-        console.log(THREE);
-
-
     }
 
     place = (pos, rotation) =>{
@@ -44,7 +40,7 @@ class Item {
         let that = this;
         return new Promise((resolve,reject)=>{
             console.log('create item:',that.config.width, that.config.height,that.config.depth);
-            const geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
+            const geometry = new THREE.BoxGeometry(that.config.width, that.config.height,that.config.depth);
             if(!this.config.color){
                 this.config.color = 0xfffff;
             };

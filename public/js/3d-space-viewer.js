@@ -34,6 +34,36 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         this.controllers = []
         this.layoutBuilder = new LayoutBuilder({items:[{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]}); // use default test items
         this.dimensions = this.layoutBuilder.dimensions;
+        this.fetchCollection().then((nfts)=>{
+            this.initSpace({
+                el: "collection-wrapper",
+                items: nfts
+            });
+        })
+    }
+
+    fetchCollection = () =>{
+        return new Promise((resolve, reject) => {
+            let postData = {userName:'3DeSocial'};
+
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(postData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            fetch('collection/fetch',options)
+                .then(response => response.json())
+                .then((data)=>{ 
+                    console.log('nfts recieved');
+                    console.log(data);
+                    resolve(data.nfts);
+                });
+
+        });
+
     }
 
     initSpace(opts){
