@@ -2,7 +2,7 @@ var express = require('express');
 const app = express();
 
 var router = express.Router();
-var D3DNFT = require('3d-nft-viewer');
+//var D3DNFT = require('3d-nft-viewer');
 const Axios = require('axios') 
 const Fs = require('fs')  
 const Path = require('path') 
@@ -10,7 +10,7 @@ const Path = require('path')
 router.get('/', function(req, res, next) {
   res.render('collection', { title: '3D NFT Collection'});
 });
-/* View the NFT using GET request */
+/* View the NFT using GET request
 router.get('/:nftPostHashHex', function(req, res, next) {
   
   let nftPostHashHex = req.params.nftPostHashHex;
@@ -46,6 +46,6 @@ router.get('/:nftPostHashHex', function(req, res, next) {
     };
   });
 
-});
+}); */
 
 module.exports = router;

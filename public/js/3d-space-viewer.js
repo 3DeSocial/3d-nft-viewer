@@ -1,6 +1,9 @@
 export const name = 'd3d-space-viewer';
 let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
 
+import { LayoutBuilder } from '/js/DSO_LayoutBuilder.js'
+import { D3DInventory } from '/js/D3D_Inventory.js'
+
  class D3DSpaceViewer {
     
     constructor(config) {
@@ -29,33 +32,53 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
         this.prevGamePads = new Map(),
         this.speedFactor = [0.1, 0.1, 0.1, 0.1],
         this.controllers = []
-
+        this.layoutBuilder = new LayoutBuilder({items:[{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]}); // use default test items
+        this.dimensions = this.layoutBuilder.dimensions;
     }
 
-    initContainer(parentDivEl){
-        //First lets create a parent DIV
-        this.parentDivEl = parentDivEl;
+    initSpace(opts){
 
-        this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
-        this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
+        this.config = {
+            ...this.config,
+            ...opts
+        };
+
+        //First lets create a parent DIV
+        this.parentDivEl = document.getElementById(opts.el);
+        if(!this.parentDivEl){
+            throw('No parent element passed');
+            return false;
+        };
+        this.parentDivElWidth = this.parentDivEl.offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.offsetHeight;
 
         //Lets create a new Scene
         this.scene = new THREE.Scene();
-        this.initSkybox();
-        this.initCamera();
+
+      //  this.initSkybox();
         this.initRenderer();
+        this.initInventory();
+        this.renderLayout();
+        this.renderItems();
+        this.initCamera();        
         this.initLighting();
         this.initLoaders();
         this.initControls();
         this.addListeners();
+        this.animate();
 
+
+    }
+
+    initInventory = () =>{
+        this.inventory = new D3DInventory({three: THREE, items: this.config.items, scene: this.scene});
     }
 
     initCamera = () =>{
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
+        this.camera.position.set(10, 8, 10);
 
     }
 
@@ -80,7 +103,7 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
-        this.renderer.domElement.setAttribute('style','display:none;');
+        //this.renderer.domElement.setAttribute('style','display:none;');
         this.parentDivEl.appendChild(this.renderer.domElement);
 
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
@@ -90,6 +113,54 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
         this.renderer.domElement.style.height = '100%';        
     }
 
+    renderLayout = () =>{
+        this.addFloor();
+    }
+    
+    renderItems = () =>{
+
+        let width = this.dimensions.width;
+        let depth = this.dimensions.depth;
+        let xpos = 0;
+        let zpos = 0;
+        let ypos = 0;
+        let items = this.inventory.getItems();
+        let areaOffset = width / 2; //0,0,0 is center so start positioning from negative offset of half area width
+        items.forEach((item, idx)=>{
+
+            let itemWidthOffset = item.width/2;
+            console.log('itemWidthOffset: ',itemWidthOffset);
+
+            let itemHeightOffset = item.height/2;
+            console.log('itemHeightOffset: ',itemHeightOffset);
+
+            if(idx===0){
+                item.config.color = 0xFF0000;
+            };
+
+            if(xpos === width){
+                xpos = 0;
+                zpos++;
+            };
+
+            if((xpos<width)&&(zpos<depth)){
+                console.log('positioning..');
+                console.log(xpos,ypos,zpos);
+
+                let newPos = new THREE.Vector3((xpos-areaOffset+itemWidthOffset),ypos+itemHeightOffset,(zpos-areaOffset+itemWidthOffset));
+                console.log(newPos);
+                item.fetchModel()
+                .then((mesh)=>{
+                    item.mesh = mesh;
+                    item.positionItem(newPos);
+                    item.addToScene();
+                })
+                xpos++;
+            };
+        })
+        
+
+    }
 
     initSkybox = ()=>{
         if(this.config.skyboxes !== false){
@@ -108,6 +179,7 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(-4, 15, 10);
         this.scene.add(directionalLight);
+        console.log('light added');
     }
 
     initLoaders = () =>{
@@ -657,12 +729,12 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
         if(this.floorPlane){
             this.scene.add( this.floorPlane );
         } else {
-            const geometry = new THREE.PlaneGeometry( 20, 20  );
+            const geometry = new THREE.PlaneGeometry( this.dimensions.width, this.dimensions.depth );
             geometry.rotateX(-Math.PI * 0.5);
             let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set( 10, 10 );
+            texture.repeat.set( this.dimensions.width, this.dimensions.depth );
             const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
             this.floorPlane = new THREE.Mesh( geometry, material );
             this.scene.add( this.floorPlane );           
@@ -753,4 +825,4 @@ let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
     }    
 }
 
-export {D3DNFTViewer, D3DNFTViewerOverlay};
+export {D3DSpaceViewer};

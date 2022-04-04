@@ -3,32 +3,42 @@ export const name = 'DSO_LayoutBuilder';
 class LayoutBuilder {
 	   
 	   constructor(config) {
-
-        let defaults = {
-                    items: [{width: 1, height:1, depth:1},{width: 1, height:1, depth:1},{width: 1, height:1, depth:1},{width: 1, height:1, depth:1},{width: 1, height:1, depth:1}]
+	       let defaults = {
+                    items: [{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]
                 };
         
-        this.config = {
-            ...defaults,
-            ...config
-        };
+    	    this.config = {
+        	    ...defaults,
+            	...config
+        	};
 
-        this.dimensions = this.calcDimensionsSquare();
+        	this.init();
+    }
+
+    init = () =>{
+       	this.dimensions = this.calcDimensionsSquare();
+
     }
 
     calcDimensionsSquare = () =>{
 
-    	this.totalArea = this.calcTotalArea();
+    	this.noItems = this.calcTotalArea();
+        console.log('this.noItems: '+this.noItems);
 
-    	return {	width:this.totalArea/2,
+        this.totalArea = this.roundToSquare(this.noItems);
+        console.log('this.totalArea nearest square: '+this.totalArea);
+
+    	let width = Math.sqrt(this.totalArea); 
+    	let depth = Math.sqrt(this.totalArea); 
+    	return {	width:width,
     				height:10, 
-    				depth:this.totalArea/2};
-  
+    				depth:depth};
+
     }
 
     calcTotalArea = () =>{
     	let area = this.config.items.length;
-    	if(this.isOdd(this.totalArea)){
+    	if(this.isOdd(area)){
     		area++;
     	};
     	return area;
@@ -37,6 +47,13 @@ class LayoutBuilder {
 	isOdd = (num) => {
 		return (num % 2) == 1;
 	}
+
+    roundToSquare = (number) => {
+        let sRt = Math.sqrt(number);
+        let cRt = Math.ceil(sRt);
+        let nextSquare = cRt*cRt;
+        return nextSquare;
+    }
 }
 
 export {LayoutBuilder}
