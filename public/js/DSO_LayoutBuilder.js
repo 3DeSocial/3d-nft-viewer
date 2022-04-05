@@ -26,10 +26,12 @@ class LayoutBuilder {
         console.log('this.noItems: '+this.noItems);
 
         this.totalArea = this.roundToSquare(this.noItems);
+        this.totalArea = (this.totalArea*8);
         console.log('this.totalArea nearest square: '+this.totalArea);
 
-    	let width = Math.sqrt(this.totalArea); 
-    	let depth = Math.sqrt(this.totalArea); 
+    	let width = 4 + this.noItems *4; 
+    	let depth = 8
+        console.log(width,depth);
     	return {	width:width,
     				height:10, 
     				depth:depth};

@@ -85,14 +85,14 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         //Lets create a new Scene
         this.scene = new THREE.Scene();
 
-      //  this.initSkybox();
+        this.initSkybox();
         this.initRenderer();
+        this.initLoaders(); 
         this.initInventory();
         this.renderLayout();
         this.renderItems();
         this.initCamera();        
         this.initLighting();
-        this.initLoaders();
         this.initControls();
         this.addListeners();
         this.animate();
@@ -101,7 +101,10 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
     }
 
     initInventory = () =>{
-        this.inventory = new D3DInventory({three: THREE, items: this.config.items, scene: this.scene});
+        this.inventory = new D3DInventory({ three: THREE,
+                                            items: this.config.items,
+                                            scene: this.scene,
+                                            gltfLoader: this.gltfLoader});
     }
 
     initCamera = () =>{
@@ -157,17 +160,19 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         let items = this.inventory.getItems();
         let areaOffset = width / 2; //0,0,0 is center so start positioning from negative offset of half area width
         items.forEach((item, idx)=>{
+            if(idx>0){
+                let xOffset = (this.dimensions.width / 2) -2;
+           // let itemHeightOffset = item.height/2;
 
-            let itemWidthOffset = item.width/2;
+     /*      let itemWidthOffset = item.width/2;
             console.log('itemWidthOffset: ',itemWidthOffset);
 
-            let itemHeightOffset = item.height/2;
             console.log('itemHeightOffset: ',itemHeightOffset);
 
-            if(idx===0){
+      //      if(idx===0){
                 item.config.color = 0xFF0000;
-            };
-
+       //     };
+//
             if(xpos === width){
                 xpos = 0;
                 zpos++;
@@ -176,18 +181,14 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             if((xpos<width)&&(zpos<depth)){
                 console.log('positioning..');
                 console.log(xpos,ypos,zpos);
-
-                let newPos = new THREE.Vector3((xpos-areaOffset+itemWidthOffset),ypos+itemHeightOffset,(zpos-areaOffset+itemWidthOffset));
-                console.log(newPos);
-                item.fetchModel()
-                .then((mesh)=>{
-                    item.mesh = mesh;
-                    item.positionItem(newPos);
-                    item.addToScene();
-                })
-                xpos++;
-            };
-        })
+*/
+                let newPos = new THREE.Vector3(xpos - xOffset,0,0);
+                xpos = xpos+4;
+                //                console.log(newPos);
+             //  let newPos = new THREE.Vector3(0,itemHeightOffset,0);
+                item.place(newPos);
+            }
+        });
         
 
     }
@@ -336,8 +337,8 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             this.camera.aspect = this.containerWidth / this.containerHeight;
             this.camera.updateProjectionMatrix();
         } else {
-        }
-        // this.render();
+            this.resizeCanvas();
+        };
     }
     resizeCanvas = () =>{
         if(this.isFullScreen){
@@ -351,7 +352,7 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         }
-        this.fitCameraToMesh(this.nftMesh);        
+        this.fitCameraToMesh(this.scene);        
     }
 
         isIterable = (obj) =>{
@@ -363,12 +364,7 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         }
         
         animate = () =>{
-            console.log('animate');
-            console.log('isPresenting: ' + this.renderer.xr.isPresenting);
             this.renderer.setAnimationLoop(this.render);
-
-            //    this.renderer.render(this.scene, this.camera);
-            //requestAnimationFrame(this.animate);
         }
         
         render = () =>{
@@ -592,23 +588,6 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         this.controls.update();
     }
 
-    load(modeURL,cb) {
-        let that = this;
-
-        this.gltfLoader.load(modeURL, (model)=> {
-
-            model.scene.updateMatrixWorld(true);
-            that.scene.add(model.scene);            
-            that.fitCameraToMesh(model.scene);
-            that.nftMesh = model.scene;
-            that.parentDivEl.children[0].setAttribute('style','display:none;');
-            that.renderer.domElement.setAttribute('style','display:inline-block;');
-            if(cb){cb()};
-        })
-
-
-    }
-
     updateUI = (el, modelUrl) => {
 
         let linkCtr = this.config.linkCtrCls;
@@ -758,7 +737,10 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
     addFloor = () =>{
         if(this.floorPlane){
             this.scene.add( this.floorPlane );
+            this.floorPlane.position.set(0,0,0);
+
         } else {
+            console.log( this.dimensions.width, this.dimensions.depth);
             const geometry = new THREE.PlaneGeometry( this.dimensions.width, this.dimensions.depth );
             geometry.rotateX(-Math.PI * 0.5);
             let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
@@ -767,7 +749,9 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             texture.repeat.set( this.dimensions.width, this.dimensions.depth );
             const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
             this.floorPlane = new THREE.Mesh( geometry, material );
-            this.scene.add( this.floorPlane );           
+            this.scene.add( this.floorPlane );  
+            this.floorPlane.position.set(0,0,0);
+
         }
 
     }
