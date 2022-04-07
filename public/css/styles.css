@@ -27,3 +27,9 @@ form.nft-3d-overlay {
 	display: inline-block;
 	margin-left: 0.5em;
 }
+
+#collection-wrapper {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}

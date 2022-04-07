@@ -22,3 +22,42 @@
 </ul>	
 
 {{/if}}
+<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+<script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.skypack.dev/three"
+        }
+      }
+    </script>
+    <script type="module">
+      // Find the latest version by visiting https://cdn.skypack.dev/three.
+      import * as THREE from 'three';
+
+
+      import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/controls/OrbitControls.js';
+      import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+      import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
+
+      import { VRButton } from '/js/DSO_VRButton.js';
+
+      import { D3DNFTViewer } from '/js/3dviewer.js'
+
+            //initialize NFT viewer front end
+        let nftViewer = new D3DNFTViewer({
+            three: THREE,
+            GLTFLoader: GLTFLoader,
+            OrbitControls: OrbitControls,
+            XRControllerModelFactory: XRControllerModelFactory,
+            VRButton: VRButton,
+            ctrClass: 'nft-viewer', // Attribute of div containing image
+            nftDataAttr: 'data-nft', // Attribute of div.ctrClass containing post has hex
+            nftsRoute: 'nfts', // Back end route to initialize NFTs
+            modelsRoute: 'models', // Back end route to load models
+            linkText: 'View in 3D',
+            previewCtrCls: 'container', //container element in which to create the preview
+            skyboxes: true
+        });
+        nftViewer.initNFTs();
+
+   </script>

@@ -9,6 +9,7 @@
     "3d-nft-viewer": "^1.0.4",
     "axios": "^0.26.0",
     "cookie-parser": "~1.4.4",
+    "cypress": "^9.5.3",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "extract-zip": "^2.0.1",

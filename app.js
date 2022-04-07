@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
+var collectionRouter = require('./routes/collection');
 var nftsRouter = require('./routes/nfts.js');
 var feedsRouter = require('./routes/feeds.js');
 var usersRouter = require('./routes/users.js');
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
+app.use('/collection', collectionRouter);
 app.use('/nfts', nftsRouter);
 app.use('/feeds', feedsRouter);
 app.use('/users', usersRouter);

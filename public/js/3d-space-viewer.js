@@ -1,52 +1,10 @@
-export const name = 'd3dntfviewer';
+export const name = 'd3d-space-viewer';
 let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
 
-class D3DNFTViewerOverlay {
-    constructor(config) {
+import { LayoutBuilder } from '/js/DSO_LayoutBuilder.js'
+import { D3DInventory } from '/js/D3D_Inventory.js'
 
-        let defaults = {
-                    el: document.body,
-                    handlers: {}
-                };
-        
-        this.config = {
-            ...defaults,
-            ...config
-        };
-
-        this.optionsMenu = this.createOptionsMenu(this.el);
-        this.addEventListeners();
-
-    }
-
-    createOptionsMenu = () =>{
-        const node = document.getElementById("nft-overlay");
-        let menu = node.cloneNode(true);
-            menu.setAttribute('style','display:inline-block;');
-            this.config.el.appendChild(menu);
-        return menu;
-    }
-
-    addEventListeners = () =>{
-        let that = this;
-     
-        let floorCbx = this.optionsMenu.querySelector('#floor');
-        floorCbx.addEventListener('change',(e)=>{
-            if(that.config.handlers['floor']){
-                that.config.handlers['floor'](floorCbx.checked);
-            }
-        });
-
-        let skyCbx = this.optionsMenu.querySelector('#sky');
-        skyCbx.addEventListener('change',(e)=>{
-            if(that.config.handlers['sky']){
-                that.config.handlers['sky'](skyCbx.checked);
-            }
-        })        
-    }
-}
-
- class D3DNFTViewer {
+ class D3DSpaceViewer {
     
     constructor(config) {
 
@@ -74,33 +32,86 @@ class D3DNFTViewerOverlay {
         this.prevGamePads = new Map(),
         this.speedFactor = [0.1, 0.1, 0.1, 0.1],
         this.controllers = []
+        this.layoutBuilder = new LayoutBuilder({items:[{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]}); // use default test items
+        this.dimensions = this.layoutBuilder.dimensions;
+        this.fetchCollection().then((nfts)=>{
+            this.initSpace({
+                el: "collection-wrapper",
+                items: nfts
+            });
+        })
+    }
+
+    fetchCollection = () =>{
+        return new Promise((resolve, reject) => {
+            let postData = {userName:'3DeSocial'};
+
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(postData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            fetch('collection/fetch',options)
+                .then(response => response.json())
+                .then((data)=>{ 
+                    console.log('nfts recieved');
+                    console.log(data);
+                    resolve(data.nfts);
+                });
+
+        });
 
     }
-    
-    initContainer(parentDivEl){
-        //First lets create a parent DIV
-        this.parentDivEl = parentDivEl;
 
-        this.parentDivElWidth = this.parentDivEl.children[0].offsetWidth;
-        this.parentDivElHeight = this.parentDivEl.children[0].offsetHeight;
+    initSpace(opts){
+
+        this.config = {
+            ...this.config,
+            ...opts
+        };
+
+        //First lets create a parent DIV
+        this.parentDivEl = document.getElementById(opts.el);
+        if(!this.parentDivEl){
+            throw('No parent element passed');
+            return false;
+        };
+        this.parentDivElWidth = this.parentDivEl.offsetWidth;
+        this.parentDivElHeight = this.parentDivEl.offsetHeight;
 
         //Lets create a new Scene
         this.scene = new THREE.Scene();
+
         this.initSkybox();
-        this.initCamera();
         this.initRenderer();
+        this.initLoaders(); 
+        this.initInventory();
+        this.renderLayout();
+        this.renderItems();
+        this.initCamera();        
         this.initLighting();
-        this.initLoaders();
         this.initControls();
         this.addListeners();
+        this.animate();
 
+
+    }
+
+    initInventory = () =>{
+        this.inventory = new D3DInventory({ three: THREE,
+                                            items: this.config.items,
+                                            scene: this.scene,
+                                            gltfLoader: this.gltfLoader});
     }
 
     initCamera = () =>{
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
+        this.camera.position.set(10, 8, 10);
 
     }
 
@@ -125,7 +136,7 @@ class D3DNFTViewerOverlay {
 
         this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         this.renderer.setClearColor( 0x000000, 1 );
-        this.renderer.domElement.setAttribute('style','display:none;');
+        //this.renderer.domElement.setAttribute('style','display:none;');
         this.parentDivEl.appendChild(this.renderer.domElement);
 
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
@@ -135,22 +146,61 @@ class D3DNFTViewerOverlay {
         this.renderer.domElement.style.height = '100%';        
     }
 
+    renderLayout = () =>{
+        this.addFloor();
+        this.addLogo();
+    }
+    
+    renderItems = () =>{
+
+        let width = this.dimensions.width;
+        let depth = this.dimensions.depth;
+        let xpos = 0;
+        let zpos = 0;
+        let ypos = 0;
+        let items = this.inventory.getItems();
+        let areaOffset = width / 2; //0,0,0 is center so start positioning from negative offset of half area width
+        items.forEach((item, idx)=>{
+            if(idx>0){
+                let xOffset = (this.dimensions.width / 2) -2;
+           // let itemHeightOffset = item.height/2;
+
+     /*      let itemWidthOffset = item.width/2;
+            console.log('itemWidthOffset: ',itemWidthOffset);
+
+            console.log('itemHeightOffset: ',itemHeightOffset);
+
+      //      if(idx===0){
+                item.config.color = 0xFF0000;
+       //     };
+//
+            if(xpos === width){
+                xpos = 0;
+                zpos++;
+            };
+
+            if((xpos<width)&&(zpos<depth)){
+                console.log('positioning..');
+                console.log(xpos,ypos,zpos);
+*/
+                let newPos = new THREE.Vector3(xpos - xOffset,0,0);
+                xpos = xpos+4;
+                //                console.log(newPos);
+             //  let newPos = new THREE.Vector3(0,itemHeightOffset,0);
+                item.place(newPos);
+            }
+        });
+        
+
+    }
 
     initSkybox = ()=>{
         if(this.config.skyboxes !== false){
-            this.addSky();
+            let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+            let skyBoxNo = this.getRandomInt(0,4);
+            let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
+            this.scene.background = skyBox;
         };
-    }
-
-    addSky = () =>{
-        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-        let skyBoxNo = this.getRandomInt(0,4);
-        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-        this.scene.background = skyBox;        
-    }
-
-    removeSky = () => {
-        this.scene.background = null;
     }
 
     initLighting = () =>{
@@ -161,6 +211,7 @@ class D3DNFTViewerOverlay {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(-4, 15, 10);
         this.scene.add(directionalLight);
+        console.log('light added');
     }
 
     initLoaders = () =>{
@@ -171,7 +222,7 @@ class D3DNFTViewerOverlay {
     addListeners = ()=>{
         this.addEventListenerResize();
         this.addEventListenerExitFullScreen();
-    }    
+    }
 
     showOverlay =()=>{
 
@@ -184,13 +235,6 @@ class D3DNFTViewerOverlay {
                         that.addFloor();
                     } else {
                         that.removeFloor();
-                    }
-                },
-                sky: (checked)=>{
-                    if(checked){
-                        that.addSky();
-                    } else {
-                        that.removeSky();
                     }
                 }
             }
@@ -291,10 +335,11 @@ class D3DNFTViewerOverlay {
 
     resize = () =>{
         if (!this.renderer.xr.isPresenting) {
-            this.resizeCanvas();
+            this.camera.aspect = this.containerWidth / this.containerHeight;
+            this.camera.updateProjectionMatrix();
         } else {
-        }
-        // this.render();
+            this.resizeCanvas();
+        };
     }
     resizeCanvas = () =>{
         if(this.isFullScreen){
@@ -308,7 +353,7 @@ class D3DNFTViewerOverlay {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         }
-        this.fitCameraToMesh(this.nftMesh);        
+        this.fitCameraToMesh(this.scene);        
     }
 
         isIterable = (obj) =>{
@@ -320,12 +365,7 @@ class D3DNFTViewerOverlay {
         }
         
         animate = () =>{
-            console.log('animate');
-            console.log('isPresenting: ' + this.renderer.xr.isPresenting);
             this.renderer.setAnimationLoop(this.render);
-
-            //    this.renderer.render(this.scene, this.camera);
-            //requestAnimationFrame(this.animate);
         }
         
         render = () =>{
@@ -549,23 +589,6 @@ class D3DNFTViewerOverlay {
         this.controls.update();
     }
 
-    load(modeURL,cb) {
-        let that = this;
-
-        this.gltfLoader.load(modeURL, (model)=> {
-
-            model.scene.updateMatrixWorld(true);
-            that.scene.add(model.scene);            
-            that.fitCameraToMesh(model.scene);
-            that.nftMesh = model.scene;
-            that.parentDivEl.children[0].setAttribute('style','display:none;');
-            that.renderer.domElement.setAttribute('style','display:inline-block;');
-            if(cb){cb()};
-        })
-
-
-    }
-
     updateUI = (el, modelUrl) => {
 
         let linkCtr = this.config.linkCtrCls;
@@ -713,17 +736,41 @@ class D3DNFTViewerOverlay {
 
 
     addFloor = () =>{
+        if(this.floorPlane){
+            this.scene.add( this.floorPlane );
+            this.floorPlane.position.set(0,0,0);
 
-        const geometry = new THREE.PlaneGeometry( 20, 20  );
-        geometry.rotateX(-Math.PI * 0.5);
-        let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set( 10, 10 );
-        const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
-        this.floorPlane = new THREE.Mesh( geometry, material );
-        this.scene.add( this.floorPlane );           
-        
+        } else {
+            console.log( this.dimensions.width, this.dimensions.depth);
+            const geometry = new THREE.PlaneGeometry( this.dimensions.width, this.dimensions.depth );
+            geometry.rotateX(-Math.PI * 0.5);
+            let texture = new THREE.TextureLoader().load('images/textures/asphalt.jpg' );
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set( this.dimensions.width, this.dimensions.depth );
+            const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+            this.floorPlane = new THREE.Mesh( geometry, material );
+            this.scene.add( this.floorPlane );  
+            this.floorPlane.position.set(0,0,0);
+
+        }
+
+    }
+
+    addLogo = () =>{
+        if(this.logoPlane){
+            this.scene.add( this.logoPlane );
+            this.logoPlane.position.set(0,100,-500);
+
+        } else {
+            console.log( this.dimensions.width, this.dimensions.depth);
+            const geometry = new THREE.PlaneGeometry( 1000, 463 );
+            let texture = new THREE.TextureLoader().load('images/nftz_logo.png' );
+            const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+            this.logoPlane = new THREE.Mesh( geometry, material );
+            this.scene.add( this.logoPlane );  
+            this.logoPlane.position.set(0,100,-500);
+        }
 
     }
 
@@ -810,4 +857,4 @@ class D3DNFTViewerOverlay {
     }    
 }
 
-export {D3DNFTViewer, D3DNFTViewerOverlay};
+export {D3DSpaceViewer};

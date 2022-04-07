@@ -6,6 +6,7 @@ const Fs = require('fs')
 
 router.post('/', (req, res) => {
 
+  // recieve username as post request from feed form
   const userName = req.body.username;
 
   let feedReader = new D3DNFT.FeedReader();
@@ -20,27 +21,8 @@ router.post('/', (req, res) => {
           req.send('error retrieving nfts');
         };
 
-        let xrNFTs = [];
-
-        if(r.data){
-          if(r.data.NFTsMap){
-            let allNFTs = r.data.NFTsMap;
-            for(i in allNFTs){
-              let nft = allNFTs[i];
-              let PostExtraData = nft.PostEntryResponse.PostExtraData;
-              if(PostExtraData){
-                  if(PostExtraData['3DExtraData']){
-                    let previewImage = (nft.PostEntryResponse.ImageURLs[0])?nft.PostEntryResponse.ImageURLs[0]:'';
-                    let nftData = {previewImage: previewImage,
-                                  message: nft.PostEntryResponse.Body,
-                                  nftPostHashHex: nft.PostEntryResponse.PostHashHex};
-                    xrNFTs.push(nftData);
-                  };
-              };
-            };
-
-          }
-        };
+        xrNFTs = feedReader.filterXRNFTs(r.data);
+        
          res.render('feeds', { title: userName,
                 nfts: xrNFTs,
                 publicKey:publicKey,
@@ -57,6 +39,7 @@ router.post('/', (req, res) => {
  
 });
 
+//recieve username as url parameter for direct links
 router.get('/:username', (req, res) => {
 
   const userName = req.params.username;
