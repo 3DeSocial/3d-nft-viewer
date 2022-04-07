@@ -29,12 +29,20 @@ class D3DNFTViewerOverlay {
 
     addEventListeners = () =>{
         let that = this;
+     
         let floorCbx = this.optionsMenu.querySelector('#floor');
         floorCbx.addEventListener('change',(e)=>{
             if(that.config.handlers['floor']){
                 that.config.handlers['floor'](floorCbx.checked);
             }
-        })
+        });
+
+        let skyCbx = this.optionsMenu.querySelector('#sky');
+        skyCbx.addEventListener('change',(e)=>{
+            if(that.config.handlers['sky']){
+                that.config.handlers['sky'](skyCbx.checked);
+            }
+        })        
     }
 }
 
@@ -130,11 +138,19 @@ class D3DNFTViewerOverlay {
 
     initSkybox = ()=>{
         if(this.config.skyboxes !== false){
-            let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
-            let skyBoxNo = this.getRandomInt(0,4);
-            let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
-            this.scene.background = skyBox;
+            this.addSky();
         };
+    }
+
+    addSky = () =>{
+        let skyBoxList = ['blue','bluecloud','browncloud','lightblue','yellowcloud'];
+        let skyBoxNo = this.getRandomInt(0,4);
+        let skyBox = this.loadSkyBox(skyBoxList[skyBoxNo]);
+        this.scene.background = skyBox;        
+    }
+
+    removeSky = () => {
+        this.scene.background = null;
     }
 
     initLighting = () =>{
@@ -168,6 +184,13 @@ class D3DNFTViewerOverlay {
                         that.addFloor();
                     } else {
                         that.removeFloor();
+                    }
+                },
+                sky: (checked)=>{
+                    if(checked){
+                        that.addSky();
+                    } else {
+                        that.removeSky();
                     }
                 }
             }
