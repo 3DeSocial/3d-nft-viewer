@@ -148,6 +148,7 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
 
     renderLayout = () =>{
         this.addFloor();
+        this.addLogo();
     }
     
     renderItems = () =>{
@@ -752,6 +753,23 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             this.scene.add( this.floorPlane );  
             this.floorPlane.position.set(0,0,0);
 
+        }
+
+    }
+
+    addLogo = () =>{
+        if(this.logoPlane){
+            this.scene.add( this.logoPlane );
+            this.logoPlane.position.set(0,100,-500);
+
+        } else {
+            console.log( this.dimensions.width, this.dimensions.depth);
+            const geometry = new THREE.PlaneGeometry( 1000, 463 );
+            let texture = new THREE.TextureLoader().load('images/nftz_logo.png' );
+            const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
+            this.logoPlane = new THREE.Mesh( geometry, material );
+            this.scene.add( this.logoPlane );  
+            this.logoPlane.position.set(0,100,-500);
         }
 
     }
