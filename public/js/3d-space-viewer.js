@@ -65,23 +65,23 @@ const params = {
         this.layoutBuilder = new LayoutBuilder({items:[{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]}); // use default test items
         this.dimensions = this.layoutBuilder.dimensions;
 
-         this.initSpace({
+       /*  this.initSpace({
                 el: "collection-wrapper",
                 items: []
             });
-
-        /*this.fetchCollection().then((nfts)=>{
+*/
+        this.fetchCollection().then((nfts)=>{
             this.initSpace({
                 el: "collection-wrapper",
                 items: nfts
             });
-        })*/
+        })
     }
 
     reset = ()=> {
 console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
-        this.player.position.set( 0, 10, 0 );
+        this.player.position.set( 0, 5, 5 );
         this.camera.position.sub( this.controls.target );
         this.controls.target.copy( this.player.position );
         this.camera.position.add( this.player.position );
@@ -136,9 +136,9 @@ console.log('player reset');
         this.initRenderer();
         this.initLoaders(); 
         this.loadColliderEnvironment();
-      //  this.initInventory();
+        this.initInventory();
        // this.renderLayout();
-       // this.renderItems();
+        this.renderItems();
         this.initCamera();        
         this.initLighting();
         this.initControls();
@@ -474,7 +474,7 @@ console.log('added environment');
         let depth = this.dimensions.depth;
         let xpos = 0;
         let zpos = 0;
-        let ypos = 0;
+        let ypos = -11.5;
         let items = this.inventory.getItems();
         let areaOffset = width / 2; //0,0,0 is center so start positioning from negative offset of half area width
         items.forEach((item, idx)=>{
@@ -500,7 +500,9 @@ console.log('added environment');
                 console.log('positioning..');
                 console.log(xpos,ypos,zpos);
 */
-                let newPos = new THREE.Vector3(xpos - xOffset,0,0);
+console.log('positioning..');
+                console.log(xpos,ypos,zpos);
+                let newPos = new THREE.Vector3(xpos - xOffset,ypos,0);
                 xpos = xpos+4;
                 //                console.log(newPos);
              //  let newPos = new THREE.Vector3(0,itemHeightOffset,0);
