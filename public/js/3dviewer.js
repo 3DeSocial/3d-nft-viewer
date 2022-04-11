@@ -836,7 +836,12 @@ class D3DNFTViewerOverlay {
             .then((data)=>{ 
 
                 if(data !== undefined){
-                    let fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    if(that.config.modelsRoute.indexOf('http')===-1){
+                        // not a remote server so add a slash for local path
+                        let fullUrl = '/'+that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    } else {
+                        let fullUrl = that.config.modelsRoute+'/'+nftPostHash+data.modelUrl;
+                    };
                     this.updateUI(el, fullUrl);
                 };
 
