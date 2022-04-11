@@ -331,49 +331,10 @@ class D3DNFTViewerOverlay {
         render = () =>{
             if (this.renderer.xr.isPresenting === true) {
                 this.dollyMove();
-            } else {
-                this.movePlayer();
             };
             this.renderer.render(this.scene, this.camera);
         }
 
-        movePlayer = () =>{
-            const delta = Math.min( clock.getDelta(), 0.1 );
-            if ( params.firstPerson ) {
-
-                controls.maxPolarAngle = Math.PI;
-                controls.minDistance = 1e-4;
-                controls.maxDistance = 1e-4;
-
-            } else {
-
-                controls.maxPolarAngle = Math.PI / 2;
-                controls.minDistance = 1;
-                controls.maxDistance = 20;
-
-            }
-
-            if ( collider ) {
-
-                collider.visible = params.displayCollider;
-                visualizer.visible = params.displayBVH;
-
-                const physicsSteps = params.physicsSteps;
-
-                for ( let i = 0; i < physicsSteps; i ++ ) {
-
-                    updatePlayer( delta / physicsSteps );
-
-                }
-
-            }
-
-            // TODO: limit the camera movement based on the collider
-            // raycast in direction of camera and move it if it's further than the closest point
-
-            controls.update();
-                
-        }
         dollyMove = () =>{
             var handedness = 'unknown';
             var self = this;
