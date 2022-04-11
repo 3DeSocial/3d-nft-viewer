@@ -88,9 +88,9 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         this.initSkybox();
         this.initRenderer();
         this.initLoaders(); 
-        this.initInventory();
+      //  this.initInventory();
         this.renderLayout();
-        this.renderItems();
+       // this.renderItems();
         this.initCamera();        
         this.initLighting();
         this.initControls();
@@ -147,10 +147,21 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
     }
 
     renderLayout = () =>{
-        this.addFloor();
-        this.addLogo();
+        let modelUrl = '/layouts/gallery1/scene.gltf';
+        this.loadLayoutModel(modelUrl);
+      //  this.addFloor();
+      //  this.addLogo();
     }
-    
+    loadLayoutModel =(modelURL)=>{
+        let that = this;
+        that.gltfLoader.load(modelURL, (model)=> {
+            let gltfMesh = null;
+            gltfMesh = model.scene;
+            gltfMesh.scale.set(0.25,0.25,0.25);
+            gltfMesh.position.set(0,0,0);        
+            that.scene.add(gltfMesh);
+        })
+    }
     renderItems = () =>{
 
         let width = this.dimensions.width;
@@ -205,11 +216,11 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
 
     initLighting = () =>{
         //Add lights
-        this.hlight = new THREE.AmbientLight(0xffffff);
-        this.scene.add(this.hlight);
+       // this.hlight = new THREE.AmbientLight(0xffffff, 0.8);
+       // this.scene.add(this.hlight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(-4, 15, 10);
+        directionalLight.position.set(10, 10, 10);
         this.scene.add(directionalLight);
         console.log('light added');
     }
@@ -338,10 +349,11 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             this.camera.aspect = this.containerWidth / this.containerHeight;
             this.camera.updateProjectionMatrix();
         } else {
-            this.resizeCanvas();
+           // this.resizeCanvas();
         };
     }
     resizeCanvas = () =>{
+        this.isFullScreen = true;
         if(this.isFullScreen){
             let canvasWidth = screen.width;
             let canvasHeight = screen.height;
