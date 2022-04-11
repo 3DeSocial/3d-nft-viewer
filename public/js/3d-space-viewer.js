@@ -1,8 +1,34 @@
 export const name = 'd3d-space-viewer';
-let THREE, GLTFLoader, OrbitControls, XRControllerModelFactory, VRButton;
+let THREE;
 
+let renderer, camera, scene, clock, gui, stats;
+let environment, collider, visualizer, player, controls, geometries;
+let playerIsOnGround = false;
+let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
+
+import * as BufferGeometryUtils from 'https://unpkg.com/three@0.139.1/examples/jsm/utils/BufferGeometryUtils.js';
+
+import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
+import { XRControllerModelFactory } from '/js/webxr/XRControllerModelFactory.js';
+import { RoundedBoxGeometry } from 'https://unpkg.com/three@0.139.1/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from '/js/index.module.js';
 import { LayoutBuilder } from '/js/DSO_LayoutBuilder.js'
 import { D3DInventory } from '/js/D3D_Inventory.js'
+import { VRButton } from '/js/DSO_VRButton.js';
+
+const params = {
+
+    firstPerson: false,
+
+    displayCollider: false,
+    displayBVH: false,
+    visualizeDepth: 10,
+    gravity: - 30,
+    playerSpeed: 10,
+    physicsSteps: 5
+
+};
 
  class D3DSpaceViewer {
     
@@ -20,11 +46,15 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             ...config
         };
         THREE = this.config.three;
-        GLTFLoader = this.config.GLTFLoader;
-        OrbitControls = this.config.OrbitControls;
-        XRControllerModelFactory = this.config.XRControllerModelFactory;
-        VRButton = this.config.VRButton;
 
+
+        this.playerVelocity = new THREE.Vector3();
+        this.upVector = new THREE.Vector3( 0, 1, 0 );
+        this.tempVector = new THREE.Vector3();
+        this.tempVector2 = new THREE.Vector3();
+        this.tempBox = new THREE.Box3();
+        this.tempMat = new THREE.Matrix4();
+        this.tempSegment = new THREE.Line3();
         this.isFullScreen = false;
         this.floorPlane = null;
         this.cameraVector = new THREE.Vector3();
@@ -34,14 +64,30 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         this.controllers = []
         this.layoutBuilder = new LayoutBuilder({items:[{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5},{width: 0.5, height:0.5, depth:0.5}]}); // use default test items
         this.dimensions = this.layoutBuilder.dimensions;
-        this.fetchCollection().then((nfts)=>{
+
+         this.initSpace({
+                el: "collection-wrapper",
+                items: []
+            });
+
+        /*this.fetchCollection().then((nfts)=>{
             this.initSpace({
                 el: "collection-wrapper",
                 items: nfts
             });
-        })
+        })*/
     }
 
+    reset = ()=> {
+
+        this.playerVelocity.set( 0, 0, 0 );
+        this.player.position.set( 15.75, - 3, 30 );
+        this.camera.position.sub( this.controls.target );
+        this.controls.target.copy( this.player.position );
+        this.camera.position.add( this.player.position );
+        this.controls.update();
+
+    }
     fetchCollection = () =>{
         return new Promise((resolve, reject) => {
             let postData = {userName:'3DeSocial'};
@@ -84,15 +130,18 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
 
         //Lets create a new Scene
         this.scene = new THREE.Scene();
+        this.clock = new THREE.Clock();
 
         this.initSkybox();
         this.initRenderer();
         this.initLoaders(); 
+        this.loadColliderEnvironment();
       //  this.initInventory();
-        this.renderLayout();
+       // this.renderLayout();
        // this.renderItems();
         this.initCamera();        
         this.initLighting();
+        this.initPlayer();
         this.initControls();
         this.addListeners();
         this.animate();
@@ -100,6 +149,22 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
 
     }
 
+    initPlayer = () => {
+        // character
+        player = new THREE.Mesh(
+            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
+            new THREE.MeshStandardMaterial()
+        );
+        player.geometry.translate( 0, - 0.5, 0 );
+        player.capsuleInfo = {
+            radius: 0.5,
+            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+        };
+        player.castShadow = true;
+        player.receiveShadow = true;
+        player.material.shadowSide = 2;
+        this.scene.add( player );        
+    }
     initInventory = () =>{
         this.inventory = new D3DInventory({ three: THREE,
                                             items: this.config.items,
@@ -111,7 +176,9 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 10);
+        this.camera.position.set( 10, 10, - 10);
+        this.camera.far = 100;
+        this.camera.updateProjectionMatrix();
 
     }
 
@@ -162,6 +229,117 @@ import { D3DInventory } from '/js/D3D_Inventory.js'
             that.scene.add(gltfMesh);
         })
     }
+
+    loadColliderEnvironment =() =>{
+
+        this.gltfLoader.load( '/layouts/amphitheater/scene.gltf', res => {
+
+            const gltfScene = res.scene;
+         //   gltfScene.scale.setScalar( .01 );
+
+            const box = new THREE.Box3();
+            box.setFromObject( gltfScene );
+            box.getCenter( gltfScene.position ).negate();
+            gltfScene.updateMatrixWorld( true );
+
+            // visual geometry setup
+            const toMerge = {};
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+                    console.log('mesh found');
+                    const hex = c.material.color.getHex();
+                    toMerge[ hex ] = toMerge[ hex ] || [];
+                    toMerge[ hex ].push( c );
+
+                }
+
+            } );
+
+            environment = new THREE.Group();
+            for ( const hex in toMerge ) {
+
+                const arr = toMerge[ hex ];
+                const visualGeometries = [];
+                arr.forEach( mesh => {
+
+                    if ( mesh.material.emissive.r !== 0 ) {
+
+                        environment.attach( mesh );
+
+                    } else {
+
+                        const geom = mesh.geometry.clone();
+                        geom.applyMatrix4( mesh.matrixWorld );
+                        visualGeometries.push( geom );
+
+                    }
+
+                } );
+
+                if ( visualGeometries.length ) {
+
+                    const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
+                    const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
+                    newMesh.castShadow = true;
+                    newMesh.receiveShadow = true;
+                    newMesh.material.shadowSide = 2;
+
+                    environment.add( newMesh );
+
+                }
+
+            }
+
+            // collect all geometries to merge
+            const geometries = [];
+            console.log('environment');
+            console.log(environment);
+            environment.updateMatrixWorld( true );
+            environment.traverse( c => {
+
+                if ( c.geometry ) {
+
+                    const cloned = c.geometry.clone();
+                    cloned.applyMatrix4( c.matrixWorld );
+                    for ( const key in cloned.attributes ) {
+
+                        if ( key !== 'position' ) {
+
+                            cloned.deleteAttribute( key );
+
+                        }
+
+                    }
+
+                    geometries.push( cloned );
+
+                }
+
+            } );
+
+            // create the merged geometry
+            console.log('geometries');
+
+            console.log(geometries);
+            const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
+            mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
+
+            collider = new THREE.Mesh( mergedGeometry );
+            collider.material.wireframe = false;
+            collider.material.opacity = 0;
+            collider.material.transparent = true;
+
+            visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+         //   this.scene.add( visualizer );
+            this.scene.add( collider );
+           // this.scene.add( environment );
+            this.scene.add(gltfScene);
+console.log('added environment');
+        } );
+
+    }
+
     renderItems = () =>{
 
         let width = this.dimensions.width;

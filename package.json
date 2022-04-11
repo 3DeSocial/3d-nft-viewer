@@ -16,6 +16,7 @@
     "hbs": "^4.2.0",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
+    "three-mesh-bvh": "^0.5.8",
     "unzipper": "^0.10.11"
   }
 }
