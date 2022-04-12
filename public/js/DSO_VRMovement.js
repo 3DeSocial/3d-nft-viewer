@@ -1,4 +1,0 @@
-class DSO_VRMovement {
-
-
-}
