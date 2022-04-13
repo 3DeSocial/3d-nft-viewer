@@ -138,11 +138,12 @@ console.log('player reset');
         this.loadColliderEnvironment();
         this.initInventory();
        // this.renderLayout();
-        this.renderItems();
+       // this.renderItems();
         this.initCamera();        
         this.initLighting();
         this.initControls();
         this.initPlayer();
+        this.initVR();
         this.addListeners();
         this.animate();
 
@@ -178,28 +179,28 @@ console.log('player reset');
 
             this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
+            fwdPressed = false;
         }
 
         if ( bkdPressed ) {
 
             this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
+bkdPressed = false;
         }
 
         if ( lftPressed ) {
 
             this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
+lftPressed = false;
         }
 
         if ( rgtPressed ) {
 
             this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-
+rgtPressed = false;
         }
 
         this.player.updateMatrixWorld();
@@ -840,6 +841,7 @@ console.log('positioning..');
                                     }
                                 }
                             });
+
                             data.axes.forEach((value, i) => {
                                 //handlers for thumbsticks
                                 // console.log('axes: ',i);
@@ -854,18 +856,31 @@ console.log('positioning..');
                                         //   console.log('data.handedness: '+data.handedness);
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            //   (data.axes[2] > 0) ? console.log('left on left thumbstick') : console.log('right on left thumbstick')
+                                            if (data.axes[2] > 0) {
+                                                 console.log('left on left thumbstick: MOVE RIGHT');
+                                                 rgtPressed = true;
+                                                 lftPressed = false;
+                                            } else if (data.axes[2] <= 0) {
+                                                console.log('right on left thumbstick: MOVE LEFT');
+                                                 lftPressed = true;
+                                                 rgtPressed = false;
+                                            } else {
+                                                 lftPressed = false;
+                                                 rgtPressed = false;
+                                            };
 
                                             //move our dolly
                                             //we reverse the vectors 90degrees so we can do straffing side to side movement
-                                            self.dolly.position.x -=
+                                           /* self.dolly.position.x -=
                                                 self.cameraVector.z *
                                                 self.speedFactor[i] *
                                                 data.axes[2];
+
                                             self.dolly.position.z +=
                                                 self.cameraVector.x *
                                                 self.speedFactor[i] *
                                                 data.axes[2];
+                                                */
 
                                             //provide haptic feedback if available in browser
                                             /*  if (
@@ -884,7 +899,7 @@ console.log('positioning..');
                                     }*/
                                         } else {
                                             //    console.log('RH ata.axes[2]: '+data.axes[2]);
-                                            //    (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
+                                                (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
                                             self.dolly.rotateY(-THREE.Math.degToRad(data.axes[2]));
                                         }
                                         // self.controls.update();
@@ -893,7 +908,7 @@ console.log('positioning..');
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            // (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
+                                             (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
                                             self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
                                             //provide haptic feedback if available in browser
                                             /*  if (
@@ -910,8 +925,21 @@ console.log('positioning..');
                                         );
                                     }*/
                                         } else {
-                                            // (data.axes[3] > 0) ? console.log('up on right thumbstick') : console.log('down on right thumbstick')
-                                            self.dolly.position.x -=
+                                             (data.axes[3] > 0) ? console.log('up on right thumbstick MOVE BACKWARDS') : console.log('down on right thumbstick:  MOVE FORWARDS')
+                                                                                         if (data.axes[3] > 0) {
+                                                 console.log('up on right thumbstick MOVE BACKWARDS');
+                                                 bkdPressed = true;
+                                                 fwdPressed = false;
+                                            } else if (data.axes[3] <= 0) {
+                                                console.log('down on right thumbstick:  MOVE FORWARDS');
+                                                 fwdPressed = true;
+                                                 bkdPressed = false;
+                                            } else {
+                                                 bkdPressed = false;
+                                                 fwdPressed = false;
+                                            };
+                                             // MOVE FORWARDS
+                                       /*     self.dolly.position.x -=
                                                 self.cameraVector.x *
                                                 self.speedFactor[i] *
                                                 data.axes[3];
@@ -919,7 +947,7 @@ console.log('positioning..');
                                                 self.cameraVector.z *
                                                 self.speedFactor[i] *
                                                 data.axes[3];
-
+*/
                                             //provide haptic feedback if available in browser
                                             /*    if (
                                         source.gamepad.hapticActuators &&
@@ -1074,6 +1102,11 @@ console.log('positioning..');
             });         
         });     
     }
+
+        initVR = () =>{
+            let vrButtonEl = VRButton.createButton(this.renderer);
+            this.controllers = this.buildControllers();      
+        }
 
         buildControllers() {
             // controllers
