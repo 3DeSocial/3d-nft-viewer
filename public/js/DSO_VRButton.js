@@ -9,7 +9,12 @@ class VRButton {
     }
 
     let vrButtons = document.getElementsByClassName('view-vr-btn');
-    const button = vrButtons[0];
+    if(vrButtons[0]){
+      const button = vrButtons[0];
+    };
+    const button = document.createElement( 'button' );
+    button.textContent = 'View In VR';
+    document.getElementById("collection-wrapper").append(button);
     console.log('button');    
     console.log(button);
 
