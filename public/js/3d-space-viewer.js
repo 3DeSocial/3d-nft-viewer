@@ -82,10 +82,11 @@ const params = {
 console.log('player reset');
         this.playerVelocity.set( 0, 0, 0 );
         this.player.position.set( 0, 5, 5 );
-        this.camera.position.sub( this.controls.target );
-        this.controls.target.copy( this.player.position );
-        this.camera.position.add( this.player.position );
-        this.controls.update();
+        this.camera.position.set(0, 6.5, 5);
+       // this.camera.position.set( this.player.position );
+      //  this.controls.target.copy( this.player.position );
+        //this.camera.position.add( this.player.position );
+   //     this.controls.update();
 
     }
     fetchCollection = () =>{
@@ -141,7 +142,7 @@ console.log('player reset');
        // this.renderItems();
         this.initCamera();        
         this.initLighting();
-        this.initControls();
+      //  this.initControls();
         this.initPlayer();
         this.initVR();
         this.addListeners();
@@ -174,34 +175,32 @@ console.log('player reset');
         this.player.position.addScaledVector( this.playerVelocity, delta );
 
         // move the this.player
-        const angle = this.controls.getAzimuthalAngle();
+     //   const angle = this.controls.getAzimuthalAngle(); // directio camera looking
+     const angle = 0;
         if ( fwdPressed ) {
 
             this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-            fwdPressed = false;
         }
 
         if ( bkdPressed ) {
 
             this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-bkdPressed = false;
         }
 
         if ( lftPressed ) {
 
             this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-lftPressed = false;
         }
 
         if ( rgtPressed ) {
 
             this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
             this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
-rgtPressed = false;
         }
+        this.camera.position.set(this.player.position);
 
         this.player.updateMatrixWorld();
 
@@ -277,11 +276,31 @@ rgtPressed = false;
             this.playerVelocity.set( 0, 0, 0 );
 
         }
+        if (this.renderer.xr.isPresenting) {
+            if(this.player.position){
+                
+                if(this.player.position.x){
+                    console.log(this.player.position);
+               let playerx = this.player.position.x;
+               let playery = this.player.position.y;
+               let playerz = this.player.position.z;
 
-        // adjust the this.camera
-        this.camera.position.sub( this.controls.target );
-        this.controls.target.copy( this.player.position );
-        this.camera.position.add( this.player.position );
+               console.log('playerpos');
+               console.log(playerx,playery,playerz);
+             
+                this.dolly.position.set(playerx,(playery+1.5),playerz);
+
+              // playerPos.y = playerPos.y + 1.5;
+                //this.camera.position.set(playerPos);
+            }
+            };
+        };
+
+
+        // adjust the this.camerainit
+    //    this.camera.position.sub( this.controls.target );
+      //  this.controls.target.copy( this.player.position );
+        //this.camera.position.add( this.player.position );
 
         // if the this.player has fallen too far below the level reset their position to the start
         if ( this.player.position.y < - 25 ) {
@@ -311,7 +330,7 @@ rgtPressed = false;
 
     initControls = () =>{
         //Controls
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+      //  this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         //this.controls.addEventListener('change', this.render);
         //this.controls.update();        
     }
@@ -733,16 +752,16 @@ console.log('positioning..');
             const delta = Math.min( this.clock.getDelta(), 0.1 );
             if ( params.firstPerson ) {
 
-                this.controls.maxPolarAngle = Math.PI;
+          /*      this.controls.maxPolarAngle = Math.PI;
                 this.controls.minDistance = 1e-4;
                 this.controls.maxDistance = 1e-4;
-
+*/
             } else {
-
+/*
                 this.controls.maxPolarAngle = Math.PI / 2;
                 this.controls.minDistance = 1;
                 this.controls.maxDistance = 20;
-
+*/
             }
 
               if ( collider ) {
@@ -763,7 +782,7 @@ console.log('positioning..');
             // TODO: limit the camera movement based on the collider
             // raycast in direction of camera and move it if it's further than the closest point
 
-            this.controls.update();
+          //  this.controls.update();
 
             this.renderer.render(this.scene, this.camera);
         }
@@ -773,7 +792,10 @@ console.log('positioning..');
             var self = this;
             //determine if we are in an xr session
             const session = this.renderer.xr.getSession();
-
+            lftPressed = false;
+            rgtPressed = false;
+            fwdPressed = false;
+            bkdPressed = false;
             if (session) {
                 var i = 0;
                 let xrCamera = this.renderer.xr.getCamera(this.camera);
@@ -811,9 +833,9 @@ console.log('positioning..');
                                             }
                                             if (i == 3) {
                                                 //reset teleport to home position
-                                                self.dolly.position.x = 0;
-                                                self.dolly.position.y = 5;
-                                                self.dolly.position.z = 0;
+                                          //      self.dolly.position.x = 0;
+                                            //    self.dolly.position.y = 5;
+                                              //  self.dolly.position.z = 0;
                                             }
                                         } else {
                                             //console.log("Right Paddle Down");
@@ -846,130 +868,32 @@ console.log('positioning..');
                                 //handlers for thumbsticks
                                 // console.log('axes: ',i);
                                 //if thumbstick axis has moved beyond the minimum threshold from center, windows mixed reality seems to wander up to about .17 with no input
-                                if (Math.abs(value) > 0.1) {
+                                if (Math.abs(value) > 0.5) {
                                     //set the speedFactor per axis, with acceleration when holding above threshold, up to a max speed
                                     self.speedFactor[i] > 1
                                         ? (self.speedFactor[i] = 1)
                                         : (self.speedFactor[i] *= 1.001);
                                     //  console.log(value, self.speedFactor[i], i);
                                     if (i == 2) {
-                                        //   console.log('data.handedness: '+data.handedness);
                                         //left and right axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                            if (data.axes[2] > 0) {
-                                                 console.log('left on left thumbstick: MOVE RIGHT');
-                                                 rgtPressed = true;
-                                                 lftPressed = false;
-                                            } else if (data.axes[2] <= 0) {
-                                                console.log('right on left thumbstick: MOVE LEFT');
-                                                 lftPressed = true;
-                                                 rgtPressed = false;
-                                            } else {
-                                                 lftPressed = false;
-                                                 rgtPressed = false;
-                                            };
-
-                                            //move our dolly
-                                            //we reverse the vectors 90degrees so we can do straffing side to side movement
-                                           /* self.dolly.position.x -=
-                                                self.cameraVector.z *
-                                                self.speedFactor[i] *
-                                                data.axes[2];
-
-                                            self.dolly.position.z +=
-                                                self.cameraVector.x *
-                                                self.speedFactor[i] *
-                                                data.axes[2];
-                                                */
-
-                                            //provide haptic feedback if available in browser
-                                            /*  if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[2]) + Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
+                                            this.handleLeftController(data);
                                         } else {
-                                            //    console.log('RH ata.axes[2]: '+data.axes[2]);
-                                                (data.axes[2] > 0) ? console.log('left on right thumbstick') : console.log('right on right thumbstick'); // !!!THIS WORKS!!!
+                                            this.handleRightController(data);
                                             self.dolly.rotateY(-THREE.Math.degToRad(data.axes[2]));
-                                        }
-                                        // self.controls.update();
-                                    }
 
+                                        }
+                                    }
                                     if (i == 3) {
                                         //up and down axis on thumbsticks
                                         if (data.handedness == 'left') {
-                                             (data.axes[3] > 0) ? console.log('up on left thumbstick') : console.log('down on left thumbstick')
-                                            self.dolly.position.y -= self.speedFactor[i] * data.axes[3];
-                                            //provide haptic feedback if available in browser
-                                            /*  if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
+                                            this.handleLeftController(data);
                                         } else {
-                                             (data.axes[3] > 0) ? console.log('up on right thumbstick MOVE BACKWARDS') : console.log('down on right thumbstick:  MOVE FORWARDS')
-                                                                                         if (data.axes[3] > 0) {
-                                                 console.log('up on right thumbstick MOVE BACKWARDS');
-                                                 bkdPressed = true;
-                                                 fwdPressed = false;
-                                            } else if (data.axes[3] <= 0) {
-                                                console.log('down on right thumbstick:  MOVE FORWARDS');
-                                                 fwdPressed = true;
-                                                 bkdPressed = false;
-                                            } else {
-                                                 bkdPressed = false;
-                                                 fwdPressed = false;
-                                            };
-                                             // MOVE FORWARDS
-                                       /*     self.dolly.position.x -=
-                                                self.cameraVector.x *
-                                                self.speedFactor[i] *
-                                                data.axes[3];
-                                            self.dolly.position.z -=
-                                                self.cameraVector.z *
-                                                self.speedFactor[i] *
-                                                data.axes[3];
-*/
-                                            //provide haptic feedback if available in browser
-                                            /*    if (
-                                        source.gamepad.hapticActuators &&
-                                        source.gamepad.hapticActuators[0]
-                                    ) {
-                                        var pulseStrength = Math.abs(data.axes[2]) + Math.abs(data.axes[3]);
-                                        if (pulseStrength > 0.75) {
-                                            pulseStrength = 0.75;
-                                        }
-                                        var didPulse = source.gamepad.hapticActuators[0].pulse(
-                                            pulseStrength,
-                                            100
-                                        );
-                                    }*/
-                                            //self.controls.update();
+                                            this.handleRightController(data);
                                         }
                                     }
                                 } else {
-                                    //axis below threshold - reset the speedFactor if it is greater than zero  or 0.025 but below our threshold
-                                    if (Math.abs(value) > 0.025) {
-                                        self.speedFactor[i] = 0.025;
-                                    }
+     
                                 }
                             });
                         }
@@ -979,7 +903,109 @@ console.log('positioning..');
             }
         }
 
-     fitCameraToMesh(mesh, fitOffset = 0.75) {
+    handleLeftController = (data) =>{
+        this.handleLeftThumbstick('left',data);
+
+    }
+
+    handleRightController = (data) =>{
+        this.handleRightThumbstick('right',data);
+
+    }
+
+    handleLeftThumbstick = (hand, data) =>{
+        if(this.isOverMovementThreshold(data.axes[2])){
+            if (data.axes[2] > 0) {
+                //console.log(hand+ ' stick: right ',data.axes[2]);
+                this.moveRight(data);
+            } else if (data.axes[2] < 0) {
+                //console.log(hand+ ' stick: left',data.axes[2]);
+                this.moveLeft(data);
+            };
+        };
+
+        if(this.isOverMovementThreshold(data.axes[3])){
+            if(data.axes[3] > 0){
+                //console.log(hand+ ' stick: back',data.axes[3]);
+                this.moveDown(data);
+            } else if (data.axes[3] < 0){
+                //console.log(hand + ' stick: forward',data.axes[3]);
+                this.moveUp(data);
+            };
+        };
+
+    }
+
+    handleRightThumbstick = (hand, data) =>{
+        if(this.isOverMovementThreshold(data.axes[2])){
+            if (data.axes[2] > 0) {
+            //    console.log(hand+ ' stick: right ',data.axes[2]);
+                this.rotateRight(data);
+            } else if (data.axes[2] < 0) {
+              //  console.log(hand+ ' stick: left',data.axes[2]);
+                this.rotateLeft(data);
+            };
+        };
+
+        if(this.isOverMovementThreshold(data.axes[3])){
+            if(data.axes[3] > 0){
+                //console.log(hand+ ' stick: back',data.axes[3]);
+                this.moveBackward(data);
+            } else if (data.axes[3] < 0){
+                //console.log(hand + ' stick: forward',data.axes[3]);
+                this.moveForward(data);
+            };
+        };
+
+    }
+
+    isOverMovementThreshold = (value) =>{
+        if(Math.abs(value)>0.1){
+            return true;
+        };
+        return false;
+    }
+
+    moveForward = () => {
+console.log('moving forward');
+        fwdPressed= true;
+    }
+
+    moveBackward = () => {
+console.log('moving back');
+        bkdPressed = true
+    }
+
+    moveLeft = () => {
+console.log('moving left');
+        lftPressed = true;
+    }
+
+    moveRight = () => {
+console.log('moving right');
+        rgtPressed = true;
+    }
+
+    moveUp = () => {
+console.log('moving up');
+    }
+
+    moveDown = () => {
+console.log('moving down');
+        
+    }
+
+    rotateLeft = () => {
+console.log('rotate left');
+
+    }
+
+    rotateRight = () => {
+console.log('rotate right');
+
+    }
+
+    fitCameraToMesh(mesh, fitOffset = 0.75) {
 
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
@@ -1157,6 +1183,7 @@ console.log('positioning..');
             dolly.add(controllerGrip1);
             dolly.add(controllerGrip2);
             this.dolly = dolly;
+           //0 this.reset();
         }
 
 
