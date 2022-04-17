@@ -154,7 +154,7 @@ console.log('player reset');
     initPlayer = () => {
         // character
         this.player = new THREE.Mesh(
-            new RoundedBoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
+            new THREE.BoxGeometry( 1.0, 2.0, 1.0, 10, 0.5 ),
             new THREE.MeshStandardMaterial()
         );
         this.player.geometry.translate( 0, - 0.5, 0 );
@@ -165,6 +165,7 @@ console.log('player reset');
         this.player.castShadow = true;
         this.player.receiveShadow = true;
         this.player.material.shadowSide = 2;
+        this.player.rotateY(0);
         this.scene.add( this.player );        
         this.reset();
     }
@@ -280,13 +281,12 @@ console.log('player reset');
             if(this.player.position){
                 
                 if(this.player.position.x){
-                    console.log(this.player.position);
                let playerx = this.player.position.x;
                let playery = this.player.position.y;
                let playerz = this.player.position.z;
 
-               console.log('playerpos');
-               console.log(playerx,playery,playerz);
+            //   console.log('playerpos');
+              // console.log(playerx,playery,playerz);
              
                 this.dolly.position.set(playerx,(playery+1.5),playerz);
 
@@ -829,7 +829,7 @@ console.log('positioning..');
                                         if (data.handedness == 'left') {
                                             //console.log("Left Paddle Down");
                                             if (i == 1) {
-                                                self.dolly.rotateY(-THREE.Math.degToRad(1));
+                                             //   self.player.rotateY(-THREE.Math.degToRad(1));
                                             }
                                             if (i == 3) {
                                                 //reset teleport to home position
@@ -840,7 +840,7 @@ console.log('positioning..');
                                         } else {
                                             //console.log("Right Paddle Down");
                                             if (i == 1) {
-                                                self.dolly.rotateY(THREE.Math.degToRad(1));
+                                             //   self.player.rotateY(THREE.Math.degToRad(1));
                                             }
                                         }
                                     } else {
@@ -850,14 +850,14 @@ console.log('positioning..');
                                             //use the paddle buttons to rotate
                                             if (data.handedness == 'left') {
                                                 //console.log("Left Paddle Down");
-                                                self.dolly.rotateY(
-                                                    -THREE.Math.degToRad(Math.abs(value))
-                                                );
+                                             //   self.player.rotateY(
+                                              //      -THREE.Math.degToRad(Math.abs(value))
+                                               // );
                                             } else {
                                                 //console.log("Right Paddle Down");
-                                                self.dolly.rotateY(
-                                                    THREE.Math.degToRad(Math.abs(value))
-                                                );
+                                                //self.player.rotateY(
+                                                 //   THREE.Math.degToRad(Math.abs(value))
+                                                //);
                                             }
                                         }
                                     }
@@ -880,7 +880,6 @@ console.log('positioning..');
                                             this.handleLeftController(data);
                                         } else {
                                             this.handleRightController(data);
-                                            self.dolly.rotateY(-THREE.Math.degToRad(data.axes[2]));
 
                                         }
                                     }
@@ -939,20 +938,21 @@ console.log('positioning..');
     handleRightThumbstick = (hand, data) =>{
         if(this.isOverMovementThreshold(data.axes[2])){
             if (data.axes[2] > 0) {
-            //    console.log(hand+ ' stick: right ',data.axes[2]);
+                console.log(hand+ ' stick: right ',data.axes[2]);
                 this.rotateRight(data);
             } else if (data.axes[2] < 0) {
-              //  console.log(hand+ ' stick: left',data.axes[2]);
+                console.log(hand+ ' stick: left',data.axes[2]);
+
                 this.rotateLeft(data);
             };
         };
 
         if(this.isOverMovementThreshold(data.axes[3])){
             if(data.axes[3] > 0){
-                //console.log(hand+ ' stick: back',data.axes[3]);
+                console.log(hand+ ' stick: back',data.axes[3]);
                 this.moveBackward(data);
             } else if (data.axes[3] < 0){
-                //console.log(hand + ' stick: forward',data.axes[3]);
+                console.log(hand + ' stick: forward',data.axes[3]);
                 this.moveForward(data);
             };
         };
@@ -960,7 +960,7 @@ console.log('positioning..');
     }
 
     isOverMovementThreshold = (value) =>{
-        if(Math.abs(value)>0.1){
+        if(Math.abs(value)>0.5){
             return true;
         };
         return false;
@@ -997,12 +997,14 @@ console.log('moving down');
 
     rotateLeft = () => {
 console.log('rotate left');
-
+  this.player.rotateY(THREE.Math.degToRad(1));
+   this.dolly.rotateY(THREE.Math.degToRad(1));
     }
 
     rotateRight = () => {
 console.log('rotate right');
-
+    this.player.rotateY(-THREE.Math.degToRad(1));
+    this.dolly.rotateY(-THREE.Math.degToRad(1));
     }
 
     fitCameraToMesh(mesh, fitOffset = 0.75) {
@@ -1176,6 +1178,8 @@ console.log('rotate right');
             dolly.position.set(0, 0, 0);
             dolly.name = 'dolly';
             this.scene.add(dolly);
+            dolly.rotateY(0);
+
             dolly.add(this.camera);
             //add the controls to the dolly also or they will not move with the dolly
             dolly.add(controller1);
