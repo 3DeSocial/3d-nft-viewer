@@ -176,32 +176,33 @@ console.log('player reset');
         this.player.position.addScaledVector( this.playerVelocity, delta );
 
         // move the this.player
-     //   const angle = this.controls.getAzimuthalAngle(); // directio camera looking
-     const angle = 0;
+        //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
+        const angle = this.player.rotation.y;
+     console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
         if ( fwdPressed ) {
 
-            this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+            //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(-params.playerSpeed * delta );
         }
 
         if ( bkdPressed ) {
 
-            this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
-            this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+            //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(params.playerSpeed * delta );
         }
 
         if ( lftPressed ) {
 
-            this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+         //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(-params.playerSpeed * delta );
         }
 
         if ( rgtPressed ) {
 
-            this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
-            this.player.position.addScaledVector( this.tempVector, params.playerSpeed * delta );
+           // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(params.playerSpeed * delta );
         }
-        this.camera.position.set(this.player.position);
+  //      this.camera.position.set(this.player.position);
 
         this.player.updateMatrixWorld();
 
@@ -330,7 +331,7 @@ console.log('player reset');
 
     initControls = () =>{
         //Controls
-      //  this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+       // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         //this.controls.addEventListener('change', this.render);
         //this.controls.update();        
     }
@@ -997,8 +998,11 @@ console.log('moving down');
 
     rotateLeft = () => {
 console.log('rotate left');
+console.log(this.player.rotation);
   this.player.rotateY(THREE.Math.degToRad(1));
    this.dolly.rotateY(THREE.Math.degToRad(1));
+   console.log(this.player.rotation);
+
     }
 
     rotateRight = () => {
