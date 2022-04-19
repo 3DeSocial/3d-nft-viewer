@@ -32,7 +32,15 @@ class Item {
             .then((modelURL)=>{
                 this.fetchModel(modelURL)
                 .then((model)=>{
+                    if(that.shouldBeCentered(model.scene.children)){
+                        model.scene.children[0].position.set(0,0,0);
+                        let h = that.getImportedObjectSize(model.scene);
+                        let heightOffset = h/2;
+                        model.scene.position.set(0,heightOffset,0);            
+                        that.centerMeshInScene(model.scene);                
+                    };
                     this.mesh = model;
+
                     //that.setScale(model);
 
                  //   that.rotateItem();
@@ -43,6 +51,29 @@ class Item {
             });
     }
 
+    centerMeshInScene = (gltfScene) =>{
+        let firstMesh = null;
+
+        if(gltfScene.children.length === 1){
+            firstMesh = gltfScene.children[0];
+            firstMesh.geometry.center();
+            return firstMesh;            
+        } else {
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+
+                    firstMesh = c;
+                    firstMesh.geometry.center();
+                    return firstMesh;  
+                }
+
+            } );
+        }
+
+
+    }
+    
     fetchModelURL = async() =>{
         let that = this;
         return new Promise((resolve,reject)=>{
