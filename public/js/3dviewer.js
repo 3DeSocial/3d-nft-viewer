@@ -327,6 +327,8 @@ class D3DNFTViewerOverlay {
     
 
      fitCameraToMesh(mesh) {
+console.log('fit camera to..');
+console.log(mesh);
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -337,6 +339,8 @@ class D3DNFTViewerOverlay {
         const maxSize = Math.max(size.x, size.y, size.z);
         const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
+        console.log('fitHeightDistance: ', fitHeightDistance);
+        console.log('fitWidthDistance: ', fitWidthDistance);
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
         
         console.log('fitting camera', this.config.fitOffset, fitHeightDistance, fitWidthDistance);
@@ -358,6 +362,29 @@ class D3DNFTViewerOverlay {
         this.controls.update();
     }
 
+    centerMeshInScene = (gltfScene) =>{
+        let firstMesh = null;
+
+        if(gltfScene.children.length === 1){
+            firstMesh = gltfScene.children[0];
+            firstMesh.geometry.center();
+            return firstMesh;            
+        } else {
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+
+                    firstMesh = c;
+                    firstMesh.geometry.center();
+                    return firstMesh;  
+                }
+
+            } );
+        }
+
+
+    }
+
     load(modeURL,cb) {
         let that = this;
 
@@ -365,10 +392,16 @@ class D3DNFTViewerOverlay {
 
             model.scene.updateMatrixWorld(true);
             model.scene.children[0].position.set(0,0,0);
-            model.scene.position.set(0,0,0);
-            that.scene.add(model.scene);            
-            that.fitCameraToMesh(model.scene);
+
+            let h = that.getImportedObjectSize(model.scene);
+            let heightOffset = h/2;
+            model.scene.position.set(0,heightOffset,0);            
+
+            let meshToAdd = that.centerMeshInScene(model.scene);
+            that.scene.add(model.scene);         
+            model.scene.updateMatrixWorld(true);
             that.nftMesh = model.scene;
+            that.fitCameraToMesh(model.scene);
 
             that.parentDivEl.children[0].setAttribute('style','display:none;');
             that.renderer.domElement.setAttribute('style','display:inline-block;');
@@ -376,6 +409,19 @@ class D3DNFTViewerOverlay {
         })
 
 
+    }
+
+    getImportedObjectSize = (obj) =>{
+        let box = new THREE.Box3().setFromObject(obj);
+        let center = new THREE.Vector3();
+        let size = new THREE.Vector3();
+        let max = box.max;
+        let min = box.min;
+        let d = max.z - min.z;
+        let w = max.x - min.x;
+        let h = max.y - min.y;
+
+        return h;
     }
 
     updateUI = (el, modelUrl) => {
