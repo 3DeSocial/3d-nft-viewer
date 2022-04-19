@@ -1,0 +1,11 @@
+Model Information:
+* title:	Kitchen interior
+* source:	https://sketchfab.com/3d-models/kitchen-interior-7b4860d847f74a76ab94a23618ff5bc3
+* author:	Aliens (https://sketchfab.com/Aliensepg)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Kitchen interior" (https://sketchfab.com/3d-models/kitchen-interior-7b4860d847f74a76ab94a23618ff5bc3) by Aliens (https://sketchfab.com/Aliensepg) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

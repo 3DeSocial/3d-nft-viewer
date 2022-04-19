@@ -410,9 +410,10 @@ console.log('player reset');
                 const visualGeometries = [];
                 arr.forEach( mesh => {
 
-                    if ( mesh.material.emissive.r !== 0 ) {
-
+                    if ( mesh.material.emissive ) {
+                        if(mesh.material.emissive.r !== 0){
                         environment.attach( mesh );
+                        }
 
                     } else {
 

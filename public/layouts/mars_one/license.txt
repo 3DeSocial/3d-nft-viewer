@@ -1,0 +1,11 @@
+Model Information:
+* title:	"Mars One" Mission - Base
+* source:	https://sketchfab.com/3d-models/mars-one-mission-base-83ced347037f47aba8473147d65df074
+* author:	admone (https://sketchfab.com/admone)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on ""Mars One" Mission - Base" (https://sketchfab.com/3d-models/mars-one-mission-base-83ced347037f47aba8473147d65df074) by admone (https://sketchfab.com/admone) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

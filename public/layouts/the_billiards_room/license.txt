@@ -1,0 +1,11 @@
+Model Information:
+* title:	The Billiards Room
+* source:	https://sketchfab.com/3d-models/the-billiards-room-79615d823a9149069dcd06c20bc9707f
+* author:	The Hallwyl Museum (Hallwylska museet) (https://sketchfab.com/TheHallwylMuseum)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "The Billiards Room" (https://sketchfab.com/3d-models/the-billiards-room-79615d823a9149069dcd06c20bc9707f) by The Hallwyl Museum (Hallwylska museet) (https://sketchfab.com/TheHallwylMuseum) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

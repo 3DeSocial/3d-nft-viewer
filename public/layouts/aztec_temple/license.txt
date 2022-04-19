@@ -1,0 +1,11 @@
+Model Information:
+* title:	Aztec Style Temple Kit
+* source:	https://sketchfab.com/3d-models/aztec-style-temple-kit-c7c5c028570f4e90a88814d9264cc31e
+* author:	Zaxel (https://sketchfab.com/zaxel)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Aztec Style Temple Kit" (https://sketchfab.com/3d-models/aztec-style-temple-kit-c7c5c028570f4e90a88814d9264cc31e) by Zaxel (https://sketchfab.com/zaxel) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

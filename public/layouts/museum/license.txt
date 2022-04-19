@@ -1,0 +1,11 @@
+Model Information:
+* title:	VR Gallery. Museum. Interior
+* source:	https://sketchfab.com/3d-models/vr-gallery-museum-interior-0ea71131b5254fc183852e91bdd9d2a4
+* author:	vslite (https://sketchfab.com/vslite)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "VR Gallery. Museum. Interior" (https://sketchfab.com/3d-models/vr-gallery-museum-interior-0ea71131b5254fc183852e91bdd9d2a4) by vslite (https://sketchfab.com/vslite) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

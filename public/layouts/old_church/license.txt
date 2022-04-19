@@ -1,0 +1,11 @@
+Model Information:
+* title:	Old church modeling - Interior Scene
+* source:	https://sketchfab.com/3d-models/old-church-modeling-interior-scene-eb6cf543aa7d45e3acee49887ae3135c
+* author:	Aurélien Martel (https://sketchfab.com/aurelien_martel)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Old church modeling - Interior Scene" (https://sketchfab.com/3d-models/old-church-modeling-interior-scene-eb6cf543aa7d45e3acee49887ae3135c) by Aurélien Martel (https://sketchfab.com/aurelien_martel) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
