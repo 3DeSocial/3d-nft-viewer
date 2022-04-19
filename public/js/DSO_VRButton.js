@@ -1,22 +1,27 @@
 class VRButton {
 
   static createButton( renderer, options ) {
+  
+    let button = null;
 
-    if ( options ) {
+    let defaults = {
+      btnCls: 'view-vr-btn',
+      btnCtr: 'collection-wrapper'
+    };
+  
+    options = {
+        ...defaults,
+        ...options
+    };
 
-      console.error( 'THREE.VRButton: The "options" parameter has been removed. Please set the reference space type via renderer.xr.setReferenceSpaceType() instead.' );
-
-    }
-
-    let vrButtons = document.getElementsByClassName('view-vr-btn');
+    let vrButtons = document.getElementsByClassName(options.btnCls);
     if(vrButtons[0]){
       const button = vrButtons[0];
+    } else {
+      const button = document.createElement( 'button' );
+      button.textContent = 'View In VR';
+      document.getElementById(options.btnCtr).append(button);
     };
-    const button = document.createElement( 'button' );
-    button.textContent = 'View In VR';
-    document.getElementById("collection-wrapper").append(button);
-    console.log('button');    
-    console.log(button);
 
     function showEnterVR( /*device*/ ) {
 
@@ -129,15 +134,15 @@ class VRButton {
     }
 
     if ( 'xr' in navigator ) {
+      if(button){
+        button.id = 'VRButton';
+        button.style.display = 'none';
 
-      button.id = 'VRButton';
-      button.style.display = 'none';
+        //  stylizeElement( button );
 
-    //  stylizeElement( button );
+        navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
 
-      navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
-
-      console.log('immersive-vr supported: ',supported);
+        console.log('immersive-vr supported: ',supported);
         supported ? showEnterVR() : showWebXRNotFound();
 
         if ( supported && VRButton.xrSessionIsGranted ) {
@@ -146,10 +151,11 @@ class VRButton {
 
         }
 
-      } );
+        } );
 
-      return button;
-
+        return button;
+      };
+      
     } else {
 
       const message = document.createElement( 'a' );
