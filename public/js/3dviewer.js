@@ -339,6 +339,9 @@ class D3DNFTViewerOverlay {
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
         
+        console.log('fitting camera', this.config.fitOffset, fitHeightDistance, fitWidthDistance);
+        console.log('distance: ',distance);
+
         const direction = this.controls.target.clone()
             .sub(this.camera.position)
             .normalize()
@@ -362,19 +365,11 @@ class D3DNFTViewerOverlay {
 
             model.scene.updateMatrixWorld(true);
             model.scene.children[0].position.set(0,0,0);
-            model.scene.position.set(0,0,0);            
-            const box = new THREE.Box3().setFromObject(model.scene);
-
-var material = new THREE.MeshBasicMaterial({color: 0xfffff, wireframe: true});
-var bBox = new THREE.Mesh(box, material);
-bBox.add(model.scene);
-this.scene.add(bBox);        
-        //    that.scene.add(box);            
-           // that.fitCameraToMesh(model.scene);
+            model.scene.position.set(0,0,0);
+            that.scene.add(model.scene);            
+            that.fitCameraToMesh(model.scene);
             that.nftMesh = model.scene;
-            console.log('model.scene');
 
-            console.log(that.nftMesh);
             that.parentDivEl.children[0].setAttribute('style','display:none;');
             that.renderer.domElement.setAttribute('style','display:inline-block;');
             if(cb){cb()};
