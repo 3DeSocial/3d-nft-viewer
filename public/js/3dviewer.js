@@ -275,7 +275,6 @@ class D3DNFTViewerOverlay {
             if (document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement !== undefined) {
             console.log('enter full screen');
         } else {
-            console.log('exit full screen');
           var elem = this.renderer.domElement;
             elem.style.width = 'auto';
             elem.style.height = 'auto';
@@ -290,9 +289,7 @@ class D3DNFTViewerOverlay {
     resize = () =>{
         if (!this.renderer.xr.isPresenting) {
             this.resizeCanvas();
-        } else {
-        }
-        // this.render();
+        };
     }
     resizeCanvas = () =>{
         if(this.isFullScreen){
@@ -327,8 +324,7 @@ class D3DNFTViewerOverlay {
     
 
      fitCameraToMesh(mesh) {
-console.log('fit camera to..');
-console.log(mesh);
+
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -339,12 +335,9 @@ console.log(mesh);
         const maxSize = Math.max(size.x, size.y, size.z);
         const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-        console.log('fitHeightDistance: ', fitHeightDistance);
-        console.log('fitWidthDistance: ', fitWidthDistance);
+
         const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-        
-        console.log('fitting camera', this.config.fitOffset, fitHeightDistance, fitWidthDistance);
-        console.log('distance: ',distance);
+
 
         const direction = this.controls.target.clone()
             .sub(this.camera.position)
@@ -390,8 +383,6 @@ console.log(mesh);
 
         this.gltfLoader.load(modeURL, (model)=> {
 
-       //     model.scene.updateMatrixWorld(true);
-
             if(that.shouldBeCentered(model.scene.children)){
                 model.scene.children[0].position.set(0,0,0);
                 let h = that.getImportedObjectSize(model.scene);
@@ -409,9 +400,8 @@ console.log(mesh);
             that.renderer.domElement.setAttribute('style','display:inline-block;');
             if(cb){cb()};
         })
-
-
     }
+
     shouldBeCentered = (children) =>{
 
         if(children.length>1){
@@ -419,20 +409,14 @@ console.log(mesh);
         };        
     
         if(!children[0].isMesh){
-            console.log('not mesh');
             return false; // dont center         
         };
         let mesh = children[0];
-            console.log(mesh.position);
-
         if(mesh.position.x!=0){
-             console.log('reposition required');
             return true;
         };
     
         if(mesh.position.z!=0){
-             console.log('reposition required');
-
             return true;
         };
 
