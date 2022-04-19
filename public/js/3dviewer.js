@@ -59,6 +59,7 @@ class D3DNFTViewerOverlay {
         let defaults = {
                     el: document.body,
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
+                    fitOffset: 1.25,
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
                     modelsRoute: 'models'// Back end route to load models
                 };
@@ -325,8 +326,7 @@ class D3DNFTViewerOverlay {
 
     
 
-     fitCameraToMesh(mesh, fitOffset = 0.75) {
-
+     fitCameraToMesh(mesh) {
         const box = new THREE.Box3().setFromObject(mesh);
         const center = new THREE.Vector3();
         const size = new THREE.Vector3();
@@ -337,8 +337,8 @@ class D3DNFTViewerOverlay {
         const maxSize = Math.max(size.x, size.y, size.z);
         const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * this.camera.fov / 360));
         const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-        const distance = fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
-
+        const distance = this.config.fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
+        
         const direction = this.controls.target.clone()
             .sub(this.camera.position)
             .normalize()
@@ -361,9 +361,20 @@ class D3DNFTViewerOverlay {
         this.gltfLoader.load(modeURL, (model)=> {
 
             model.scene.updateMatrixWorld(true);
-            that.scene.add(model.scene);            
-            that.fitCameraToMesh(model.scene);
+            model.scene.children[0].position.set(0,0,0);
+            model.scene.position.set(0,0,0);            
+            const box = new THREE.Box3().setFromObject(model.scene);
+
+var material = new THREE.MeshBasicMaterial({color: 0xfffff, wireframe: true});
+var bBox = new THREE.Mesh(box, material);
+bBox.add(model.scene);
+this.scene.add(bBox);        
+        //    that.scene.add(box);            
+           // that.fitCameraToMesh(model.scene);
             that.nftMesh = model.scene;
+            console.log('model.scene');
+
+            console.log(that.nftMesh);
             that.parentDivEl.children[0].setAttribute('style','display:none;');
             that.renderer.domElement.setAttribute('style','display:inline-block;');
             if(cb){cb()};
@@ -444,7 +455,9 @@ class D3DNFTViewerOverlay {
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
         let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
+        console.log('targetEl');
 
+        console.log(targetEl);
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
@@ -486,7 +499,6 @@ class D3DNFTViewerOverlay {
         const material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, map:texture } );
         this.floorPlane = new THREE.Mesh( geometry, material );
         this.scene.add( this.floorPlane );           
-        
 
     }
 
