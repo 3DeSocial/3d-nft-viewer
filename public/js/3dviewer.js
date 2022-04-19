@@ -390,14 +390,16 @@ console.log(mesh);
 
         this.gltfLoader.load(modeURL, (model)=> {
 
-            model.scene.updateMatrixWorld(true);
-            model.scene.children[0].position.set(0,0,0);
+       //     model.scene.updateMatrixWorld(true);
 
-            let h = that.getImportedObjectSize(model.scene);
-            let heightOffset = h/2;
-            model.scene.position.set(0,heightOffset,0);            
-
-            let meshToAdd = that.centerMeshInScene(model.scene);
+            if(that.shouldBeCentered(model.scene.children)){
+                model.scene.children[0].position.set(0,0,0);
+                let h = that.getImportedObjectSize(model.scene);
+                let heightOffset = h/2;
+                model.scene.position.set(0,heightOffset,0);            
+                that.centerMeshInScene(model.scene);                
+            };
+          
             that.scene.add(model.scene);         
             model.scene.updateMatrixWorld(true);
             that.nftMesh = model.scene;
@@ -409,6 +411,32 @@ console.log(mesh);
         })
 
 
+    }
+    shouldBeCentered = (children) =>{
+
+        if(children.length>1){
+            return false;// dont center      
+        };        
+    
+        if(!children[0].isMesh){
+            console.log('not mesh');
+            return false; // dont center         
+        };
+        let mesh = children[0];
+            console.log(mesh.position);
+
+        if(mesh.position.x!=0){
+             console.log('reposition required');
+            return true;
+        };
+    
+        if(mesh.position.z!=0){
+             console.log('reposition required');
+
+            return true;
+        };
+
+        return false;
     }
 
     getImportedObjectSize = (obj) =>{
