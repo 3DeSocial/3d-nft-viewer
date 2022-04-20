@@ -1,0 +1,8 @@
+Model Information:
+* title:	Art Gallery for Product Showcase VR 2021
+* source:	https://sketchfab.com/3d-models/art-gallery-for-product-showcase-vr-2021-58040bf948fa4784af008304e5eaf4bf
+* author:	BehNaM (https://sketchfab.com/GbehnamG)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

@@ -152,7 +152,7 @@ class D3DNFTViewerOverlay {
 
     initLighting = () =>{
         //Add lights
-        this.hlight = new THREE.AmbientLight(0xffffff);
+        this.hlight = new THREE.AmbientLight(0x999999);
         this.scene.add(this.hlight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -179,7 +179,7 @@ class D3DNFTViewerOverlay {
             handlers: {
                 floor: (checked)=>{
                     if(checked){
-                        that.addFloor();
+                        that.addScenery();
                     } else {
                         that.removeFloor();
                     }
@@ -521,7 +521,7 @@ class D3DNFTViewerOverlay {
                 el.setAttribute('style','display:none;');
                 el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
                 el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
-                that.addFloor();
+                that.addScenery();
                 that.showOverlay();
                 that.initVR();
 
@@ -541,7 +541,32 @@ class D3DNFTViewerOverlay {
             this.controllers = this.vrControls.buildControllers();        
     }
 
-    addFloor = () =>{
+
+  /*  addScenery = () =>{
+        let that = this;
+        let modelURL = '/layouts/scifi_showroom/scene.gltf';
+        that.gltfLoader.load(modelURL, (model)=> {
+            let gltfMesh = null;
+            gltfMesh = model.scene;
+            gltfMesh.scale.set(1.5,1.5,1.5);
+            gltfMesh.position.set(0,-0.5,4);        
+            that.scene.add(gltfMesh);
+        })
+    }
+*/ 
+    addScenery = () =>{
+        let that = this;
+        let modelURL = '/layouts/round_showroom/scene.gltf';
+        that.gltfLoader.load(modelURL, (model)=> {
+            let gltfMesh = null;
+            gltfMesh = model.scene;
+            gltfMesh.scale.set(0.25,0.25,0.25);
+            gltfMesh.position.set(0,-1.5,0);        
+            that.scene.add(gltfMesh);
+        })
+    }
+/*
+   addScenery = () =>{
 
         const geometry = new THREE.PlaneGeometry( 20, 20  );
         geometry.rotateX(-Math.PI * 0.5);
@@ -553,7 +578,7 @@ class D3DNFTViewerOverlay {
         this.floorPlane = new THREE.Mesh( geometry, material );
         this.scene.add( this.floorPlane );           
 
-    }
+    }*/
 
     removeFloor = () =>{
         this.scene.remove( this.floorPlane );
