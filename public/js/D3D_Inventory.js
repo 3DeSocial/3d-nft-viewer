@@ -163,6 +163,8 @@ class Item {
     }
     setScale = (model) =>{
 
+        //create a box which is the desired size of the nft
+
         let lengthSceneBounds = {
           x: 1,
           y: 2,
