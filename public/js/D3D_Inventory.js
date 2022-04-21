@@ -30,18 +30,13 @@ class Item {
 
         this.fetchModelURL()
             .then((modelURL)=>{
+                console.log('placing item: ',modelURL)
                 this.fetchModel(modelURL)
                 .then((model)=>{
-                    if(that.shouldBeCentered(model.scene.children)){
-                        model.scene.children[0].position.set(0,0,0);
-                        let h = that.getImportedObjectSize(model.scene);
-                        let heightOffset = h/2;
-                        model.scene.position.set(0,heightOffset,0);            
-                        that.centerMeshInScene(model.scene);                
-                    };
+
                     this.mesh = model;
 
-                    //that.setScale(model);
+                  //  that.setScale(model);
 
                  //   that.rotateItem();
                     that.addToScene(model);
@@ -76,22 +71,31 @@ class Item {
     
     fetchModelURL = async() =>{
         let that = this;
+
         return new Promise((resolve,reject)=>{
-            let url = '/nfts/'+that.config.nftPostHashHex;
-                console.log('fetchModelURL from: '+url);
+            // fetch from config if available
+            if(this.config.modelURL!==''){
+                console.log('returning config url: ',this.config.modelURL);
+                resolve(this.config.modelURL);
+            } else {
+                let url = '/nfts/'+that.config.nftPostHashHex;
+                    console.log('fetchModelURL from: '+url);
 
-            fetch(url,{ method: "post"})
-            .then(response => response.json())
-            .then((data)=>{ 
+                fetch(url,{ method: "post"})
+                .then(response => response.json())
+                .then((data)=>{ 
 
-                if(data !== undefined){
-                    let fullUrl = '/'+that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
-                    resolve(fullUrl);
-                } else {
-                    reject();
-                }
-            });
+                    if(data !== undefined){
+                        let fullUrl = '/'+that.config.modelsRoute+'/'+that.config.nftPostHashHex+data.modelUrl;
+                        console.log('returning fetched url: ',this.config.modelURL);
+                        resolve(fullUrl);
+                    } else {
+                        reject();
+                    }
+                });
+            }
         })
+        
     }
 
     fetchModel = async(modelURL) =>{
@@ -101,7 +105,7 @@ class Item {
         return new Promise((resolve,reject)=>{
 
             console.log('create container:',that.config.width, that.config.height,that.config.depth);
-            const geometry = new THREE.BoxGeometry(2,2,4);
+            const geometry = new THREE.BoxGeometry(that.config.width, that.config.height,that.config.depth);
             
             if(!that.config.color){
                 that.config.color = 0xfffff;
@@ -123,6 +127,16 @@ class Item {
                 let gltfMesh = null;
 
                 gltfMesh = model.scene;
+
+                if(that.shouldBeCentered(model.scene.children)){
+                    let h = that.getImportedObjectSize(model.scene);
+                    let heightOffset = h/2;                    
+                    model.scene.children[0].position.setX(0);
+                    model.scene.children[0].position.setZ(0);
+                    model.scene.children[0].position.setY(heightOffset);                       
+                    that.centerMeshInScene(model.scene);                
+                };
+
                 let meshBounds = new THREE.Box3().setFromObject( gltfMesh );
 
 
@@ -139,9 +153,6 @@ class Item {
                   y: Math.abs(meshBounds.max.y - meshBounds.min.y),
                   z: Math.abs(meshBounds.max.z - meshBounds.min.z),
                 };
-
-                console.log('lengthMeshBounds');
-                console.log(lengthMeshBounds);     
 
                 // Calculate length ratios
                 let lengthRatios = [
@@ -161,14 +172,49 @@ class Item {
         })
       
     }
+
+    shouldBeCentered = (children) =>{
+
+        if(children.length>1){
+            return false;// dont center      
+        };        
+    
+        if(!children[0].isMesh){
+            return false; // dont center         
+        };
+        let mesh = children[0];
+        if(mesh.position.x!=0){
+            return true;
+        };
+    
+        if(mesh.position.z!=0){
+            return true;
+        };
+
+        return false;
+    }
+
+    getImportedObjectSize = (obj) =>{
+        let box = new THREE.Box3().setFromObject(obj);
+        let center = new THREE.Vector3();
+        let size = new THREE.Vector3();
+        let max = box.max;
+        let min = box.min;
+        let d = max.z - min.z;
+        let w = max.x - min.x;
+        let h = max.y - min.y;
+
+        return h;
+    }
+
     setScale = (model) =>{
 
         //create a box which is the desired size of the nft
 
         let lengthSceneBounds = {
-          x: 1,
+          x: 2,
           y: 2,
-          z: 1,
+          z: 2,
         };
 
         let meshBounds = this.getMeshBounds(model);
@@ -194,7 +240,7 @@ class Item {
     getMeshBounds = (model) => {
         let that = this;
         let meshBounds = null;
-        console.log(model);
+
         model.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.geometry.computeBoundingBox()
@@ -207,9 +253,6 @@ class Item {
 
     positionItem = (model, posVector) =>{
         model.position.copy(posVector);
-        console.log('position set');
-        console.log(model);
-        console.log(this.scene);
     }
 
     rotateItem = () =>{
@@ -217,7 +260,6 @@ class Item {
     }
 
     addToScene = (model) =>{
-        console.log('adding to scene');
         this.scene.add(model);
     }
 
@@ -239,9 +281,6 @@ class Item {
         THREE = this.config.three;
         this.scene = this.config.scene;
         this.gltfLoader = this.config.gltfLoader;
-
-        console.log('D3DInventory');
-        console.log(THREE);
 
         this.items = [];
 

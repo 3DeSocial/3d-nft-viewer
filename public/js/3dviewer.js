@@ -6,6 +6,7 @@ import { OrbitControls } from 'https://unpkg.com/three@0.139.1/examples/jsm/cont
 import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders/GLTFLoader.js';
 import { VRButton } from '/js/DSO_VRButton.js';
 import { VRControls } from '/js/D3D_VRControls.js';
+import { Item } from '/js/D3D_Inventory.js';
 
 class D3DNFTViewerOverlay {
     constructor(config) {
@@ -97,15 +98,26 @@ class D3DNFTViewerOverlay {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 8, 40);
+        this.camera.position.set(10, 10, 40);
 
     }
 
     initControls = () =>{
         //Controls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.restrictCameraToRoom();
         this.controls.addEventListener('change', this.render);
         this.controls.update();        
+    }
+
+    restrictCameraToRoom = () => {
+        this.controls.maxDistance = 14;
+        this.controls.maxPolarAngle = (Math.PI/2.1); 
+    }
+
+    unRestrictCamera = () => {
+        this.controls.maxDistance = null;
+        this.controls.maxPolarAngle = null; 
     }
 
     initRenderer = () =>{
@@ -162,7 +174,6 @@ class D3DNFTViewerOverlay {
 
     initLoaders = () =>{
         //Loader GLTF
-        console.log('init loader');
         this.gltfLoader = new GLTFLoader();        
     }
 
@@ -170,6 +181,8 @@ class D3DNFTViewerOverlay {
         this.addEventListenerResize();
         this.addEventListenerExitFullScreen();
     }    
+
+
 
     showOverlay =()=>{
 
@@ -181,6 +194,7 @@ class D3DNFTViewerOverlay {
                     if(checked){
                         that.addScenery();
                     } else {
+                        that.unRestrictCamera();
                         that.removeFloor();
                     }
                 },
@@ -302,7 +316,7 @@ class D3DNFTViewerOverlay {
             this.camera.aspect = this.parentDivElWidth/this.parentDivElHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
-        }
+        };
         this.fitCameraToMesh(this.nftMesh);        
     }
 
@@ -378,50 +392,6 @@ class D3DNFTViewerOverlay {
 
     }
 
-    load(modeURL,cb) {
-        let that = this;
-
-        this.gltfLoader.load(modeURL, (model)=> {
-
-            if(that.shouldBeCentered(model.scene.children)){
-                model.scene.children[0].position.set(0,0,0);
-                let h = that.getImportedObjectSize(model.scene);
-                let heightOffset = h/2;
-                model.scene.position.set(0,heightOffset,0);            
-                that.centerMeshInScene(model.scene);                
-            };
-          
-            that.scene.add(model.scene);         
-            model.scene.updateMatrixWorld(true);
-            that.nftMesh = model.scene;
-            that.fitCameraToMesh(model.scene);
-
-            that.parentDivEl.children[0].setAttribute('style','display:none;');
-            that.renderer.domElement.setAttribute('style','display:inline-block;');
-            if(cb){cb()};
-        })
-    }
-
-    shouldBeCentered = (children) =>{
-
-        if(children.length>1){
-            return false;// dont center      
-        };        
-    
-        if(!children[0].isMesh){
-            return false; // dont center         
-        };
-        let mesh = children[0];
-        if(mesh.position.x!=0){
-            return true;
-        };
-    
-        if(mesh.position.z!=0){
-            return true;
-        };
-
-        return false;
-    }
 
     getImportedObjectSize = (obj) =>{
         let box = new THREE.Box3().setFromObject(obj);
@@ -517,18 +487,45 @@ class D3DNFTViewerOverlay {
             e.stopPropagation();
             that.updateLink(el,'Loading..');
             that.initContainer(targetEl);
-            that.load(modelUrl, function(){
-                el.setAttribute('style','display:none;');
-                el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
-                el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
-                that.addScenery();
-                that.showOverlay();
-                that.initVR();
+            let item = that.initItem(modelUrl);
+            that.nftMesh = item.model;
+            let newPos = new THREE.Vector3(0,1.2,0);
+            item.place(newPos);
 
-                that.animate();
+            el.setAttribute('style','display:none;');
+            that.parentDivEl.children[0].setAttribute('style','display:none;');
+            that.renderer.domElement.setAttribute('style','display:inline-block;');            
+            el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
+            el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
+            that.addScenery();
+            that.showOverlay();
+            that.initVR();
+            that.animate();
 
-            });         
         });     
+    }
+
+    initInventory = () =>{
+
+        this.inventory = new D3DInventory({ three: THREE,
+                                            items: this.config.items,
+                                            scene: this.scene,
+                                            gltfLoader: this.gltfLoader});
+    }
+
+    initItem = (modelURL) =>{
+        console.log('initItem: '+modelURL);
+        return new Item({
+            three: THREE,
+            gltfLoader: this.gltfLoader,
+            scene: this.scene,
+            height: 6,
+            width: 6,
+            depth: 6,
+            modelURL: modelURL
+        });
+
+
     }
 
     initVR = () =>{
@@ -560,8 +557,8 @@ class D3DNFTViewerOverlay {
         that.gltfLoader.load(modelURL, (model)=> {
             let gltfMesh = null;
             gltfMesh = model.scene;
-            gltfMesh.scale.set(0.25,0.25,0.25);
-            gltfMesh.position.set(0,-1.5,0);        
+            gltfMesh.position.set(0,0,0); 
+            gltfMesh.scale.set(0.2,0.2,0.2);    
             that.scene.add(gltfMesh);
         })
     }
