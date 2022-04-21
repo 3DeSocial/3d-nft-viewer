@@ -62,7 +62,9 @@ class D3DNFTViewerOverlay {
                     ctrClass: 'data-nft', // Attribute of div containing nft preview area for a single nft
                     fitOffset: 1.25,
                     nftsRoute: 'nfts', // Back end route to initialize NFTs
-                    modelsRoute: 'models'// Back end route to load models
+                    modelsRoute: 'models',// Back end route to load models
+                    sceneryPath: '/layouts/round_showroom/scene.gltf',
+                    skyboxPath: '/images/skyboxes/'
                 };
         
         this.config = {
@@ -98,7 +100,7 @@ class D3DNFTViewerOverlay {
         //Create a camera
         this.camera = new THREE.PerspectiveCamera(60, this.parentDivElWidth/this.parentDivElHeight, 0.01, 1000 );
         //Only gotcha. Set a non zero vector3 as the camera position.
-        this.camera.position.set(10, 10, 40);
+        this.camera.position.set(10, 8, 40);
 
     }
 
@@ -113,11 +115,13 @@ class D3DNFTViewerOverlay {
     restrictCameraToRoom = () => {
         this.controls.maxDistance = 14;
         this.controls.maxPolarAngle = (Math.PI/2.1); 
+        this.controls.update();  
     }
 
     unRestrictCamera = () => {
-        this.controls.maxDistance = null;
-        this.controls.maxPolarAngle = null; 
+        this.controls.maxDistance = Infinity;
+        this.controls.maxPolarAngle = Infinity; 
+        this.controls.update();
     }
 
     initRenderer = () =>{
@@ -179,10 +183,9 @@ class D3DNFTViewerOverlay {
 
     addListeners = ()=>{
         this.addEventListenerResize();
+        this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
     }    
-
-
 
     showOverlay =()=>{
 
@@ -218,7 +221,8 @@ class D3DNFTViewerOverlay {
         let skybox ='';
 
         const loader = new THREE.CubeTextureLoader();
-              loader.setPath( '/images/skyboxes/'+boxname+'/' );
+        let skyboxPath = this.config.skyboxPath+boxname+'/';
+        loader.setPath(skyboxPath);
 
         switch(boxname){
             case 'bluecloud':
@@ -276,6 +280,17 @@ class D3DNFTViewerOverlay {
         window.addEventListener('resize', this.resize.bind(this), false);
     }
 
+    addEventListenerContextLost = () =>{
+
+        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+    }
+
+    onLostContext = (e)=>{
+        e.preventDefault();
+        console.log('lost!', e);
+        this.renderer.setAnimationLoop(null);
+    }
+
     addEventListenerExitFullScreen = () =>{
         if (document.addEventListener){
             document.addEventListener('webkitfullscreenchange', this.fsChangeHandler, false);
@@ -287,7 +302,6 @@ class D3DNFTViewerOverlay {
 
     fsChangeHandler = () =>{
             if (document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement !== undefined) {
-            console.log('enter full screen');
         } else {
           var elem = this.renderer.domElement;
             elem.style.width = 'auto';
@@ -317,14 +331,14 @@ class D3DNFTViewerOverlay {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.parentDivElWidth, this.parentDivElHeight);
         };
-        this.fitCameraToMesh(this.nftMesh);        
+        if(this.nftMesh){
+           this.fitCameraToMesh(this.nftMesh);        
+        }
     }
 
         
         
     animate = () =>{
-        console.log('animate');
-        console.log('isPresenting: ' + this.renderer.xr.isPresenting);
         this.renderer.setAnimationLoop(this.render);
     }
     
@@ -478,9 +492,7 @@ class D3DNFTViewerOverlay {
     addClickListener3D = (ctr, el, modelUrl) => {
         let that = this;
         let targetEl = this.findElFrom(this.config.previewCtrCls, ctr);
-        console.log('targetEl');
 
-        console.log(targetEl);
         //console.log('adding listener for '+modelUrl);
         el.addEventListener("click", (e)=>{
             e.preventDefault();
@@ -539,27 +551,21 @@ class D3DNFTViewerOverlay {
     }
 
 
-  /*  addScenery = () =>{
-        let that = this;
-        let modelURL = '/layouts/scifi_showroom/scene.gltf';
-        that.gltfLoader.load(modelURL, (model)=> {
-            let gltfMesh = null;
-            gltfMesh = model.scene;
-            gltfMesh.scale.set(1.5,1.5,1.5);
-            gltfMesh.position.set(0,-0.5,4);        
-            that.scene.add(gltfMesh);
-        })
-    }
-*/ 
     addScenery = () =>{
         let that = this;
-        let modelURL = '/layouts/round_showroom/scene.gltf';
+        if(this.sceneryMesh){
+            this.scene.add(this.sceneryMesh);
+        }
+        let modelURL = this.config.sceneryPath;
         that.gltfLoader.load(modelURL, (model)=> {
             let gltfMesh = null;
             gltfMesh = model.scene;
             gltfMesh.position.set(0,0,0); 
             gltfMesh.scale.set(0.2,0.2,0.2);    
-            that.scene.add(gltfMesh);
+            that.sceneryMesh = gltfMesh;
+            that.scene.add(that.sceneryMesh);
+            this.restrictCameraToRoom();
+
         })
     }
 /*
@@ -578,7 +584,10 @@ class D3DNFTViewerOverlay {
     }*/
 
     removeFloor = () =>{
-        this.scene.remove( this.floorPlane );
+        if(this.sceneryMesh){
+            this.scene.remove(this.sceneryMesh);
+            this.unRestrictCamera();
+        }
     }
 
     addClickListenerFullScreen = (ctr, el, modelUrl) => {
