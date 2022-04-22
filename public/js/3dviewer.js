@@ -20,7 +20,7 @@ const params = {
 
     firstPerson: true,
 
-    displayCollider: true,
+    displayCollider: false,
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
@@ -639,10 +639,9 @@ console.log('toMerge: ',toMerge);
                 const visualGeometries = [];
                 arr.forEach( mesh => {
 
-                    if ( mesh.material.emissive ) {
-                        if(mesh.material.emissive.r !== 0){
-                            environment.attach( mesh );
-                        }
+                    if ( mesh.material.emissive.r !== 0 ) {
+
+                        environment.attach( mesh );
 
                     } else {
 
@@ -714,7 +713,7 @@ console.log('toMerge: ',toMerge);
          //   this.scene.add( visualizer );
             this.scene.add( this.collider );
             //environment.position.set(0,0,0);    
-            this.scene.add( environment );
+         //   this.scene.add( environment );
            //gltfScene.position.set(0,-11.5,0)
             this.scene.add(gltfScene);
 console.log('added environment');
