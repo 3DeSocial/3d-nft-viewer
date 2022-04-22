@@ -7,6 +7,28 @@ import { GLTFLoader } from 'https://unpkg.com/three@0.139.1/examples/jsm/loaders
 import { VRButton } from '/js/DSO_VRButton.js';
 import { VRControls } from '/js/D3D_VRControls.js';
 import { Item } from '/js/D3D_Inventory.js';
+import { RoundedBoxGeometry } from 'https://unpkg.com/three@0.139.1/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { MeshBVH, acceleratedRaycast, MeshBVHVisualizer } from '/js/index.module.js';
+import * as BufferGeometryUtils from 'https://unpkg.com/three@0.139.1/examples/jsm/utils/BufferGeometryUtils.js';
+
+let clock, gui, stats, delta;
+let environment, collider, visualizer, player, controls, geometries;
+let playerIsOnGround = false;
+let fwdPressed = false, bkdPressed = false, lftPressed = false, rgtPressed = false;
+
+const params = {
+
+    firstPerson: true,
+
+    displayCollider: true,
+    displayBVH: false,
+    visualizeDepth: 10,
+    gravity: - 30,
+    playerSpeed: 10,
+    physicsSteps: 5
+
+};
+
 
 class D3DNFTViewerOverlay {
     constructor(config) {
@@ -74,6 +96,8 @@ class D3DNFTViewerOverlay {
        
         this.isFullScreen = false;
         this.floorPlane = null;
+        environment = null;
+        this.collider = null;
 
     }
     
@@ -509,7 +533,7 @@ class D3DNFTViewerOverlay {
             that.renderer.domElement.setAttribute('style','display:inline-block;');            
             el.parentNode.getElementsByClassName('view-fullscreen-btn')[0].setAttribute('style','display:inline-block;');
             el.parentNode.getElementsByClassName('view-vr-btn')[0].setAttribute('style','display:inline-block;');
-            that.addScenery();
+            that.loadColliderEnvironment();
             that.showOverlay();
             that.initVR();
             that.animate();
@@ -546,10 +570,157 @@ class D3DNFTViewerOverlay {
         
         let vrButtonEl = VRButton.createButton(this.renderer);
 
-            this.vrControls = new VRControls({scene:this.scene, renderer: this.renderer, camera: this.camera});
+        this.vrControls = new VRControls({  scene:this.scene,
+                                            renderer: this.renderer,
+                                            camera: this.camera,
+                                            moveUp: function(){
+
+                                            },
+                                            moveDown: function(){
+
+                                            },
+                                            moveLeft: function(){
+                                                lftPressed = true;
+                                            },
+                                            moveRight: function(){
+                                                rgtPressed = true;
+                                            },
+                                            moveForward: function(){
+                                                fwdPressed = true;
+                                            },
+                                            moveBack: function(){
+                                                bkdPressed = true;
+                                            },
+                                            rotateLeft: function(){
+                                                that.player.rotateY(THREE.Math.degToRad(1));
+                                                this.dolly.rotateY(THREE.Math.degToRad(1));
+                                            },
+                                            rotateRight: function(){
+                                                that.player.rotateY(THREE.Math.degToRad(1));
+                                                this.dolly.rotateY(THREE.Math.degToRad(1));
+                                            }
+                                        });
             this.controllers = this.vrControls.buildControllers();        
     }
 
+    loadColliderEnvironment =() =>{
+        var that = this;
+        this.gltfLoader.load(this.config.sceneryPath, res => {
+
+            const gltfScene = res.scene;
+            console.log('gltfScene');
+
+            console.log(gltfScene);
+         //   gltfScene.scale.setScalar( .01 );
+
+            const box = new THREE.Box3();
+            box.setFromObject( gltfScene );
+            box.getCenter( gltfScene.position ).negate();
+            gltfScene.updateMatrixWorld( true );
+
+            // visual geometry setup
+            const toMerge = {};
+            gltfScene.traverse( c => {
+
+                if ( c.isMesh ) {
+                    console.log('mesh found');
+                    const hex = c.material.color.getHex();
+                    toMerge[ hex ] = toMerge[ hex ] || [];
+                    toMerge[ hex ].push( c );
+
+                }
+
+            } );
+console.log('toMerge: ',toMerge);
+            environment = new THREE.Group();
+            for ( const hex in toMerge ) {
+
+                const arr = toMerge[ hex ];
+                const visualGeometries = [];
+                arr.forEach( mesh => {
+
+                    if ( mesh.material.emissive ) {
+                        if(mesh.material.emissive.r !== 0){
+                            environment.attach( mesh );
+                        }
+
+                    } else {
+
+                        const geom = mesh.geometry.clone();
+                        geom.applyMatrix4( mesh.matrixWorld );
+                        visualGeometries.push( geom );
+
+                    }
+
+                } );
+
+                if ( visualGeometries.length ) {
+
+                    const newGeom = BufferGeometryUtils.mergeBufferGeometries( visualGeometries );
+                    const newMesh = new THREE.Mesh( newGeom, new THREE.MeshStandardMaterial( { color: parseInt( hex ), shadowSide: 2 } ) );
+                    newMesh.castShadow = true;
+                    newMesh.receiveShadow = true;
+                    newMesh.material.shadowSide = 2;
+
+                    environment.add( newMesh );
+
+                }
+
+            }
+
+            // collect all geometries to merge
+            const geometries = [];
+            console.log('meshes in environment: ');
+            console.log(environment);
+
+            environment.updateMatrixWorld( true );
+            environment.traverse( c => {
+
+                if ( c.geometry ) {
+                    console.log('geometry found');
+
+                    const cloned = c.geometry.clone();
+                    cloned.applyMatrix4( c.matrixWorld );
+                    for ( const key in cloned.attributes ) {
+
+                        if ( key !== 'position' ) {
+
+                            cloned.deleteAttribute( key );
+
+                        }
+
+                    }
+
+                    geometries.push( cloned );
+
+                }
+
+            } );
+
+            // create the merged geometry
+            console.log('geometries');
+
+            console.log(geometries);
+            const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
+            mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
+
+            this.collider = new THREE.Mesh( mergedGeometry );
+            this.collider.material.wireframe = false;
+            this.collider.material.opacity = 0;
+            this.collider.material.transparent = true;
+
+            visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
+            this.collider.position.set(0,0,0);    
+         //   this.scene.add( visualizer );
+            this.scene.add( this.collider );
+            //environment.position.set(0,0,0);    
+            this.scene.add( environment );
+           //gltfScene.position.set(0,-11.5,0)
+            this.scene.add(gltfScene);
+console.log('added environment');
+        } );
+
+    }
 
     addScenery = () =>{
         let that = this;
