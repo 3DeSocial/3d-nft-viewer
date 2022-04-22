@@ -20,7 +20,7 @@ const params = {
 
     firstPerson: true,
 
-    displayCollider: true,
+    displayCollider: false,
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
@@ -447,7 +447,7 @@ class D3DNFTViewerOverlay {
               if ( collider ) {
 //console.log('got collider');
                 collider.visible = params.displayCollider;
-                visualizer.visible = params.displayBVH;
+             //   visualizer.visible = params.displayBVH;
 
                 const physicsSteps = params.physicsSteps;
 
@@ -768,8 +768,7 @@ class D3DNFTViewerOverlay {
 
             // collect all geometries to merge
             const geometries = [];
-            console.log('meshes in environment: ');
-            console.log(environment);
+
 
             environment.updateMatrixWorld( true );
             environment.traverse( c => {
@@ -794,9 +793,6 @@ class D3DNFTViewerOverlay {
             } );
 
             // create the merged geometry
-            console.log('geometries');
-
-            console.log(geometries);
             const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
 
@@ -805,12 +801,12 @@ class D3DNFTViewerOverlay {
             collider.material.opacity = 0;
             collider.material.transparent = true;
 
-            visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+         //   visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
 
             collider.position.set(0,3,0);   
          //   this.scene.add( visualizer );
             this.scene.add( collider );
-            environment.position.set(0,0,0);    
+            //environment.position.set(0,0,0);    
          //   this.scene.add( environment );
            //gltfScene.position.set(0,-11.5,0)
             gltfScene.position.set(0,0,0); 
