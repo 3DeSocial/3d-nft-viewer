@@ -20,7 +20,7 @@ const params = {
 
     firstPerson: true,
 
-    displayCollider: false,
+    displayCollider: true,
     displayBVH: false,
     visualizeDepth: 10,
     gravity: - 30,
@@ -94,10 +94,23 @@ class D3DNFTViewerOverlay {
             ...config
         };
        
+        this.playerVelocity = new THREE.Vector3();
+        this.upVector = new THREE.Vector3( 0, 1, 0 );
+        this.tempVector = new THREE.Vector3();
+        this.tempVector2 = new THREE.Vector3();
+        this.tempBox = new THREE.Box3();
+        this.tempMat = new THREE.Matrix4();
+        this.tempSegment = new THREE.Line3();
         this.isFullScreen = false;
         this.floorPlane = null;
+        this.cameraVector = new THREE.Vector3();
+        this.dolly = null,
+        this.prevGamePads = new Map(),
+        this.speedFactor = [0.1, 0.1, 0.1, 0.1],
+        this.controllers = []
+    
         environment = null;
-        this.collider = null;
+        collider = null;
 
     }
     
@@ -110,11 +123,13 @@ class D3DNFTViewerOverlay {
 
         //Lets create a new Scene
         this.scene = new THREE.Scene();
+        this.clock = new THREE.Clock();
         this.initSkybox();
         this.initCamera();
         this.initRenderer();
         this.initLighting();
         this.initLoaders();
+        this.initPlayer();
         this.initControls();
         this.addListeners();
 
@@ -209,7 +224,49 @@ class D3DNFTViewerOverlay {
         this.addEventListenerResize();
         this.addEventListenerContextLost();
         this.addEventListenerExitFullScreen();
+       // this.addEventListenerKeys();
     }    
+
+    addEventListenerKeys = ()=>{
+        let that = this;
+       // this.addEventListenerResize();
+      // this.addEventListenerExitFullScreen();
+
+        window.addEventListener( 'keydown', function ( e ) {
+
+                switch ( e.code ) {
+
+                    case 'KeyW': fwdPressed = true; break;
+                    case 'KeyS': bkdPressed = true; break;
+                    case 'KeyD': rgtPressed = true; break;
+                    case 'KeyA': lftPressed = true; break;
+                    case 'Space':
+                        if ( that.playerIsOnGround ) {
+
+                            that.playerVelocity.y = 10.0;
+
+                        }
+
+                        break;
+
+                }
+
+            } );
+
+            window.addEventListener( 'keyup', function ( e ) {
+
+                switch ( e.code ) {
+
+                    case 'KeyW': fwdPressed = false; break;
+                    case 'KeyS': bkdPressed = false; break;
+                    case 'KeyD': rgtPressed = false; break;
+                    case 'KeyA': lftPressed = false; break;
+
+                }
+
+            } );
+
+    }
 
     showOverlay =()=>{
 
@@ -306,7 +363,7 @@ class D3DNFTViewerOverlay {
 
     addEventListenerContextLost = () =>{
 
-        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
+//        this.renderer.context.canvas.addEventListener("webglcontextlost", this.onLostContext);
     }
 
     onLostContext = (e)=>{
@@ -368,8 +425,46 @@ class D3DNFTViewerOverlay {
     
     render = () =>{
         if (this.renderer.xr.isPresenting === true) {
-            this.vrControls.dollyMove();
+            this.vrControls.checkControllers();
+
         };
+
+            const delta = Math.min( this.clock.getDelta(), 0.1 );
+            if ( params.firstPerson ) {
+
+          /*      this.controls.maxPolarAngle = Math.PI;
+                this.controls.minDistance = 1e-4;
+                this.controls.maxDistance = 1e-4;
+*/
+            } else {
+/*
+                this.controls.maxPolarAngle = Math.PI / 2;
+                this.controls.minDistance = 1;
+                this.controls.maxDistance = 20;
+*/
+            }
+
+              if ( collider ) {
+//console.log('got collider');
+                collider.visible = params.displayCollider;
+                visualizer.visible = params.displayBVH;
+
+                const physicsSteps = params.physicsSteps;
+
+                for ( let i = 0; i < physicsSteps; i ++ ) {
+
+                    this.updatePlayer( delta / physicsSteps );
+
+                }
+
+            } else {
+  //              console.log('no collider');
+            }
+
+            // TODO: limit the camera movement based on the collider
+            // raycast in direction of camera and move it if it's further than the closest point
+
+          //  this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -565,6 +660,8 @@ class D3DNFTViewerOverlay {
     }
 
     initVR = () =>{
+
+        let that = this;
         
         VRButton.registerSessionGrantedListener();        
         
@@ -586,6 +683,7 @@ class D3DNFTViewerOverlay {
                                                 rgtPressed = true;
                                             },
                                             moveForward: function(){
+                                                console.log('fwd detecte');
                                                 fwdPressed = true;
                                             },
                                             moveBack: function(){
@@ -593,14 +691,14 @@ class D3DNFTViewerOverlay {
                                             },
                                             rotateLeft: function(){
                                                 that.player.rotateY(THREE.Math.degToRad(1));
-                                                this.dolly.rotateY(THREE.Math.degToRad(1));
+                                                that.dolly.rotateY(THREE.Math.degToRad(1));
                                             },
                                             rotateRight: function(){
-                                                that.player.rotateY(THREE.Math.degToRad(1));
-                                                this.dolly.rotateY(THREE.Math.degToRad(1));
+                                                that.player.rotateY(-THREE.Math.degToRad(1));
+                                                that.dolly.rotateY(-THREE.Math.degToRad(1));
                                             }
                                         });
-            this.controllers = this.vrControls.buildControllers();        
+            this.dolly = this.vrControls.buildControllers();        
     }
 
     loadColliderEnvironment =() =>{
@@ -609,6 +707,7 @@ class D3DNFTViewerOverlay {
 
             const gltfScene = res.scene;
             console.log('gltfScene');
+            gltfScene.scale.set(0.2,0.2,0.2);    
 
             console.log(gltfScene);
          //   gltfScene.scale.setScalar( .01 );
@@ -631,7 +730,7 @@ class D3DNFTViewerOverlay {
                 }
 
             } );
-console.log('toMerge: ',toMerge);
+
             environment = new THREE.Group();
             for ( const hex in toMerge ) {
 
@@ -676,8 +775,6 @@ console.log('toMerge: ',toMerge);
             environment.traverse( c => {
 
                 if ( c.geometry ) {
-                    console.log('geometry found');
-
                     const cloned = c.geometry.clone();
                     cloned.applyMatrix4( c.matrixWorld );
                     for ( const key in cloned.attributes ) {
@@ -703,19 +800,23 @@ console.log('toMerge: ',toMerge);
             const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries( geometries, false );
             mergedGeometry.boundsTree = new MeshBVH( mergedGeometry, { lazyGeneration: false } );
 
-            this.collider = new THREE.Mesh( mergedGeometry );
-            this.collider.material.wireframe = false;
-            this.collider.material.opacity = 0;
-            this.collider.material.transparent = true;
+            collider = new THREE.Mesh( mergedGeometry );
+            collider.material.wireframe = false;
+            collider.material.opacity = 0;
+            collider.material.transparent = true;
 
-            visualizer = new MeshBVHVisualizer( this.collider, params.visualizeDepth );
-            this.collider.position.set(0,0,0);    
+            visualizer = new MeshBVHVisualizer( collider, params.visualizeDepth );
+
+            collider.position.set(0,3,0);   
          //   this.scene.add( visualizer );
-            this.scene.add( this.collider );
-            //environment.position.set(0,0,0);    
+            this.scene.add( collider );
+            environment.position.set(0,0,0);    
          //   this.scene.add( environment );
            //gltfScene.position.set(0,-11.5,0)
+            gltfScene.position.set(0,0,0); 
+
             this.scene.add(gltfScene);
+
 console.log('added environment');
         } );
 
@@ -841,6 +942,189 @@ console.log('added environment');
                 console.log(response);
             });
         };
+
+    }
+
+initPlayer = () => {
+        // character
+
+        let mat = new THREE.MeshStandardMaterial();
+            mat.opacity = 0;
+            mat.transparent = true;
+
+        this.player = new THREE.Mesh(
+            new THREE.BoxGeometry( 1, 1, 1),
+            mat
+        );
+
+        this.player.capsuleInfo = {
+            radius: 0.75,
+            segment: new THREE.Line3( new THREE.Vector3(), new THREE.Vector3( 0, - 1.0, 0.0 ) )
+        };
+     /*   this.player.castShadow = true;
+        this.player.receiveShadow = true;
+        this.player.material.shadowSide = 2;*/
+        this.player.rotateY(0);
+    
+        this.player.position.set(0, 4, 6);
+        this.scene.add( this.player );        
+      /*  this.reset();*/
+    }
+
+    updatePlayer = (delta) =>{
+
+        this.playerVelocity.y += this.playerIsOnGround ? 0 : delta * params.gravity;
+        this.player.position.addScaledVector( this.playerVelocity, delta );
+
+        // move the this.player
+        //const angle = this.controls.getAzimuthalAngle(); // directio camera looking
+        const angle = this.player.rotation.y;
+     console.log('x',this.player.rotation.x,'y',this.player.rotation.y,'z',this.player.rotation.z);
+        if ( fwdPressed ) {
+
+            //this.tempVector.set( 0, 0, - 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(-params.playerSpeed * delta );
+        }
+
+        if ( bkdPressed ) {
+
+            //this.tempVector.set( 0, 0, 1 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateZ(params.playerSpeed * delta );
+        }
+
+        if ( lftPressed ) {
+
+         //   this.tempVector.set( - 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(-params.playerSpeed * delta );
+        }
+
+        if ( rgtPressed ) {
+
+           // this.tempVector.set( 1, 0, 0 ).applyAxisAngle( this.upVector, angle );
+            this.player.translateX(params.playerSpeed * delta );
+        }
+  //      this.camera.position.set(this.player.position);
+
+        this.player.updateMatrixWorld();
+
+        // adjust this.player position based on collisions
+        const capsuleInfo = this.player.capsuleInfo;
+        this.tempBox.makeEmpty();
+        this.tempMat.copy( collider.matrixWorld ).invert();
+        this.tempSegment.copy( capsuleInfo.segment );
+
+        // get the position of the capsule in the local space of the collider
+        this.tempSegment.start.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+        this.tempSegment.end.applyMatrix4( this.player.matrixWorld ).applyMatrix4( this.tempMat );
+
+        // get the axis aligned bounding box of the capsule
+        this.tempBox.expandByPoint( this.tempSegment.start );
+        this.tempBox.expandByPoint( this.tempSegment.end );
+
+        this.tempBox.min.addScalar( - capsuleInfo.radius );
+        this.tempBox.max.addScalar( capsuleInfo.radius );
+
+        collider.geometry.boundsTree.shapecast( {
+
+            intersectsBounds: box => box.intersectsBox( this.tempBox ),
+
+            intersectsTriangle: tri => {
+
+                // check if the triangle is intersecting the capsule and adjust the
+                // capsule position if it is.
+                const triPoint = this.tempVector;
+                const capsulePoint = this.tempVector2;
+
+                const distance = tri.closestPointToSegment( this.tempSegment, triPoint, capsulePoint );
+                if ( distance < capsuleInfo.radius ) {
+
+                    const depth = capsuleInfo.radius - distance;
+                    const direction = capsulePoint.sub( triPoint ).normalize();
+
+                    this.tempSegment.start.addScaledVector( direction, depth );
+                    this.tempSegment.end.addScaledVector( direction, depth );
+
+                }
+
+            }
+
+        } );
+
+        // get the adjusted position of the capsule collider in world space after checking
+        // triangle collisions and moving it. capsuleInfo.segment.start is assumed to be
+        // the origin of the this.player model.
+        const newPosition = this.tempVector;
+        newPosition.copy( this.tempSegment.start ).applyMatrix4( collider.matrixWorld );
+
+        // check how much the collider was moved
+        const deltaVector = this.tempVector2;
+        deltaVector.subVectors( newPosition, this.player.position );
+
+        // if the this.player was primarily adjusted vertically we assume it's on something we should consider ground
+        this.playerIsOnGround = deltaVector.y > Math.abs( delta * this.playerVelocity.y * 0.25 );
+
+        const offset = Math.max( 0.0, deltaVector.length() - 1e-5 );
+        deltaVector.normalize().multiplyScalar( offset );
+
+        // adjust the this.player model
+        this.player.position.add( deltaVector );
+
+        if ( ! this.playerIsOnGround ) {
+
+            deltaVector.normalize();
+            this.playerVelocity.addScaledVector( deltaVector, - deltaVector.dot( this.playerVelocity ) );
+
+        } else {
+
+            this.playerVelocity.set( 0, 0, 0 );
+
+        }
+        if (this.renderer.xr.isPresenting) {
+            if(this.player.position){
+                
+                if(this.player.position.x){
+               let playerx = this.player.position.x;
+               let playery = this.player.position.y;
+               let playerz = this.player.position.z;
+
+            //   console.log('playerpos');
+              // console.log(playerx,playery,playerz);
+             
+                this.dolly.position.set(playerx,(playery+0.5),playerz);
+
+              // playerPos.y = playerPos.y + 1.5;
+                //this.camera.position.set(playerPos);
+            }
+            };
+        };
+
+
+        // adjust the this.camerainit
+    //    this.camera.position.sub( this.controls.target );
+      //  this.controls.target.copy( this.player.position );
+        //this.camera.position.add( this.player.position );
+
+        // if the this.player has fallen too far below the level reset their position to the start
+        if ( this.player.position.y < - 25 ) {
+
+            this.reset();
+
+        }
+        fwdPressed = false;
+        bkdPressed = false;
+        rgtPressed = false;
+        lftPressed = false;
+    }
+
+    reset = ()=> {
+console.log('player reset');
+        this.playerVelocity.set( 0, 0, 0 );
+        this.player.position.set( 0, 5, 5 );
+        this.camera.position.set(0, 6.5, 5);
+       // this.camera.position.set( this.player.position );
+      //  this.controls.target.copy( this.player.position );
+        //this.camera.position.add( this.player.position );
+   //     this.controls.update();
 
     }    
 }

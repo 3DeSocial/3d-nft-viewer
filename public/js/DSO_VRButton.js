@@ -16,9 +16,10 @@ class VRButton {
 
     let vrButtons = document.getElementsByClassName(options.btnCls);
     if(vrButtons[0]){
-      const button = vrButtons[0];
+      button = vrButtons[0];
+      console.log(button);
     } else {
-      const button = document.createElement( 'button' );
+      button = document.createElement( 'button' );
       button.textContent = 'View In VR';
       document.getElementById(options.btnCtr).append(button);
     };
@@ -69,9 +70,10 @@ class VRButton {
       };
 
       button.onclick = function () {
+          console.log('click vr button');
 
         if ( currentSession === null ) {
-          console.log('click vr button');
+          console.log('click vr button2');
           // WebXR's requestReferenceSpace only works if the corresponding feature
           // was requested at session creation time. For simplicity, just ask for
           // the interesting ones as optional features, but be aware that the
@@ -90,7 +92,7 @@ class VRButton {
         }
 
       };
-
+console.log('onclick event added to vr button');
     }
 
     function disableButton() {
@@ -134,6 +136,7 @@ class VRButton {
     }
 
     if ( 'xr' in navigator ) {
+      console.log('xr found in navigator');
       if(button){
         button.id = 'VRButton';
         button.style.display = 'none';
@@ -154,9 +157,12 @@ class VRButton {
         } );
 
         return button;
-      };
+      } else {
+        console.log('button NOT found')
+      }
       
     } else {
+      console.log('xr NOT FOUND in navigator');
 
       const message = document.createElement( 'a' );
 

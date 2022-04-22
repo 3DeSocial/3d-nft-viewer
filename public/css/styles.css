@@ -3,7 +3,7 @@
 }
 a.d3d-btn {
 	color: #fff;
-	padding: 0.5em 0em 0.25em 0.25em;
+	padding: 0.5em 1em 0.25em 0.25em;
 	display: inline-block;
 }
 canvas {
@@ -35,7 +35,7 @@ form.nft-3d-overlay {
 }
 button#VRButton {
 	cursor: pointer;
-	padding: .4em;
+	padding: 1em;
 	margin: 0 0 .5em;
 	box-sizing: border-box;
 	border-radius: 4px;

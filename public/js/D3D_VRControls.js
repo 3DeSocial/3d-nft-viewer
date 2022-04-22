@@ -76,13 +76,17 @@ class VRControls {
         dolly.position.set(0, 0, 0);
         dolly.name = 'dolly';
         this.scene.add(dolly);
+        dolly.rotateY(0);
+
         dolly.add(this.camera);
+        this.camera.rotateY(0);
         //add the controls to the dolly also or they will not move with the dolly
         dolly.add(controller1);
         dolly.add(controller2);
         dolly.add(controllerGrip1);
         dolly.add(controllerGrip2);
         this.dolly = dolly;
+        return dolly;
     }
 
     checkControllers = () =>{
@@ -90,10 +94,7 @@ class VRControls {
             var self = this;
             //determine if we are in an xr session
             const session = this.renderer.xr.getSession();
-            lftPressed = false;
-            rgtPressed = false;
-            fwdPressed = false;
-            bkdPressed = false;
+
             if (session) {
                 var i = 0;
                 let xrCamera = this.renderer.xr.getCamera(this.camera);
@@ -264,53 +265,45 @@ class VRControls {
         return false;
     }
 
-    moveForward = () => {
+    moveForward = (data) => {
 console.log('moving forward');
-        fwdPressed= true;
         this.config.moveForward(data);
     }
 
-    moveBackward = () => {
+    moveBackward = (data) => {
 console.log('moving back');
-        bkdPressed = true;
         this.config.moveBack(data);
     }
 
-    moveLeft = () => {
+    moveLeft = (data) => {
 console.log('moving left');
         this.config.moveLeft(data);
     }
 
-    moveRight = () => {
+    moveRight = (data) => {
 console.log('moving right');
         this.config.moveRight(data);
     }
 
-    moveUp = () => {
+    moveUp = (data) => {
         console.log('moving up');
         this.config.moveUp(data);
     }
 
-    moveDown = () => {
+    moveDown = (data) => {
 console.log('moving down');
         this.config.moveDown();
         
     }
 
-    rotateLeft = () => {
+    rotateLeft = (data) => {
 console.log('rotate left');
-console.log(this.player.rotation);
-  this.player.rotateY(THREE.Math.degToRad(1));
-   this.dolly.rotateY(THREE.Math.degToRad(1));
-   console.log(this.player.rotation);
         this.config.rotateLeft();
 
     }
 
-    rotateRight = () => {
+    rotateRight = (data) => {
 console.log('rotate right');
-    this.player.rotateY(-THREE.Math.degToRad(1));
-    this.dolly.rotateY(-THREE.Math.degToRad(1));
         this.config.rotateRight();
     }
 
