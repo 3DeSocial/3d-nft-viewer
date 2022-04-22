@@ -1086,7 +1086,7 @@ initPlayer = () => {
             //   console.log('playerpos');
               // console.log(playerx,playery,playerz);
              
-                this.dolly.position.set(playerx,(playery+0.5),playerz);
+                this.dolly.position.set(playerx,(playery+0.15),playerz);
 
               // playerPos.y = playerPos.y + 1.5;
                 //this.camera.position.set(playerPos);
